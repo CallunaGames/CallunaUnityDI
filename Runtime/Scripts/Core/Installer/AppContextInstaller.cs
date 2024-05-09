@@ -17,19 +17,52 @@ namespace SBaier.DI
         public void InstallBindings(Binder binder)
         {
             binder.BindToNewSelf<GameObjectInjector>();
+            
             binder.BindToNewSelf<GameObjectContextsReseter>();
+            
             binder.BindToNewSelf<SceneInjector>();
-            binder.BindInstance(_diContext).WithoutInjection();
+            
+            binder.BindInstance(_diContext)
+                .WithoutInjection();
+            
             binder.BindToNewSelf<DIInstanceFactory>();
-            binder.BindToSelf<DIContainers>().FromFactory();
-            binder.Bind<Factory<DIContainers>>().ToNew<DIContainersFactory>();
-            binder.BindToNewSelf<SceneContextProvider>().AsSingle();
-            binder.Bind<Factory<ChildDIContext, Resolver>>().ToNew<ChildDIContextFactory>();
-            binder.BindToSelf<MonoPoolCache>().FromMethod(CreatePoolCache).AsSingle();
-            binder.BindToNewSelf<SceneObjectsDisabler>();
-            binder.Bind<ObjectActivator>().ToNew<BasicObjectActivator>();
-            new BindingValidationInstaller().InstallBindings(binder);
-            new QuitDetectorInstaller(_contextObject).InstallBindings(binder);
+            
+            binder.BindToSelf<DIContainers>()
+                .FromFactory();
+            
+            binder.Bind<Factory<DIContainers>>()
+                .ToNew<DIContainersFactory>();
+            
+            binder.BindToNewSelf<SceneContextProvider>()
+                .AsSingle();
+            
+            binder.Bind<Factory<ChildDIContext, Resolver>>()
+                .ToNew<ChildDIContextFactory>();
+            
+            binder.BindToSelf<MonoPoolCache>()
+                .FromMethod(CreatePoolCache)
+                .AsSingle();
+
+            binder.Bind<GameObjectLifeCycleActionCaller<Cleanable>>()
+                .And<GameObjectCleaner>()
+                .ToNew<GameObjectCleaner>();
+            
+            binder.Bind<GameObjectLifeCycleActionCaller<Initializable>>()
+                .And<GameObjectInitializer>()
+                .ToNew<GameObjectInitializer>();
+            
+            binder.BindToNewSelf<SceneObjectsLifeCycleActionCaller<Cleanable>>();
+            
+            binder.BindToNewSelf<SceneObjectsLifeCycleActionCaller<Initializable>>();
+            
+            binder.Bind<ObjectActivator>()
+                .ToNew<BasicObjectActivator>();
+            
+            new BindingValidationInstaller()
+                .InstallBindings(binder);
+            
+            new QuitDetectorInstaller(_contextObject)
+                .InstallBindings(binder);
         }
 
 		private MonoPoolCache CreatePoolCache()

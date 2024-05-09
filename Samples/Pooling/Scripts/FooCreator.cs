@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace SBaier.DI.Examples.Pooling
 {
-    public class FooCreator : MonoBehaviour, Injectable
+	internal class FooCreator : MonoBehaviour, Injectable
     {
         [SerializeField]
         private Button _addButton;

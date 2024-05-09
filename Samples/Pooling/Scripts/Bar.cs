@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 
 namespace SBaier.DI.Examples.Pooling
 {
-	public class Bar : MonoBehaviour, Injectable
+	internal class Bar : MonoBehaviour, Injectable, Initializable, Cleanable
 	{
 		private Foo _foo;
 		private int _number;
@@ -14,6 +15,26 @@ namespace SBaier.DI.Examples.Pooling
 			_number = args.Num;
 		}
 
+		private void OnEnable()
+		{
+			Debug.Log("Bar OnEnable");
+		}
+
+		private void OnDisable()
+		{
+			Debug.Log("Bar OnDisable");
+		}
+
+		public void Initialize()
+		{
+			Debug.Log("Bar initialized");
+		}
+
+		public void Clean()
+		{
+			Debug.Log("Bar cleaned");
+		}
+		
 		public override string ToString()
 		{
 			return $"Bar of {_foo.ToString()} with number {_number}.";

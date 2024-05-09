@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace SBaier.DI.Examples.Pooling
 {
-    public class BarCreator : MonoBehaviour, Injectable
+	internal class BarCreator : MonoBehaviour, Injectable, Initializable, Cleanable
     {
 		public static int Amount { get; set; } = 0;
 
@@ -28,14 +28,14 @@ namespace SBaier.DI.Examples.Pooling
 			_foo = resolver.Resolve<Foo>();
 		}
 
-		private void OnEnable()
+		public void Initialize()
 		{
 			_addButton.onClick.AddListener(AddBar);
 			_removeButton.onClick.AddListener(RemoveBar);
 			UpdateInteractable();
 		}
 
-		private void OnDisable()
+		public void Clean()
 		{
 			_addButton.onClick.RemoveListener(AddBar);
 			_removeButton.onClick.RemoveListener(RemoveBar);

@@ -20,11 +20,6 @@ namespace SBaier.DI
         protected Resolver _resolver => DIContext.Resolver;
         protected Binder _binder => DIContext.Binder;
 
-	    protected virtual void OnDestroy()
-		{
-			if(Initialized)
-                DIContext.Reset();
-        }
 
 		public virtual void Init(Resolver baseResolver)
         {
@@ -35,18 +30,18 @@ namespace SBaier.DI
             DIContext.ValidateBindings();
             DoInjection();
             DIContext.CreateNonLazyInstances();
+            InitializeObjects();
+        }
+        
+        protected virtual void OnDestroy()
+        {
+            if (Initialized)
+                DoReset();
         }
 
         void Context.Reset()
         {
-            ValidateResetCall();
-            Initialized = false;
-            DIContext.Reset();
-        }
-
-		public void AddInstaller(Installer installer)
-        {
-            _installers.Add(installer);
+            DoReset();
         }
 
         public Resolver GetResolver()
@@ -55,8 +50,9 @@ namespace SBaier.DI
         }
 
         protected abstract void DoInit(Resolver resolver);
-
         protected abstract void DoInjection();
+        protected virtual void InitializeObjects() {}
+        protected virtual void CleanObjects() {}
 
         private void InstallBindings()
         {
@@ -76,6 +72,14 @@ namespace SBaier.DI
         {
             (installer as Injectable)?.Inject(resolver);
             installer.InstallBindings(_binder);
+        }
+
+        private void DoReset()
+        {
+            ValidateResetCall();
+            Initialized = false;
+            DIContext.Reset();
+            CleanObjects();
         }
 
         private void ValidateInitCall()

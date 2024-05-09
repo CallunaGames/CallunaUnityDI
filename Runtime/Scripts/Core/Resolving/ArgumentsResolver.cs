@@ -25,11 +25,6 @@ namespace SBaier.DI
 				_arguments.Add(pair.Key, pair.Value);
 		}
 
-        public void Clear()
-        {
-	        _arguments.Clear();
-        }
-
 		protected override TContract DoResolve<TContract>(BindingKey key)
 		{
 			return _arguments.ContainsKey(key) ?

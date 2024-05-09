@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace SBaier.DI.Examples.Pooling
 {
-    public class BarNameDisplay : MonoBehaviour, Injectable
+	internal class BarNameDisplay : MonoBehaviour, Injectable, Initializable
     {
         [SerializeField]
         private Text _text;
@@ -15,12 +15,7 @@ namespace SBaier.DI.Examples.Pooling
 			_bar = resolver.Resolve<Bar>();
 		}
 
-		private void OnEnable()
-		{
-			UpdateText();
-		}
-
-		private void Start()
+		public void Initialize()
 		{
 			UpdateText();
 		}
@@ -29,5 +24,5 @@ namespace SBaier.DI.Examples.Pooling
 		{
 			_text.text = _bar.ToString();
 		}
-	}
+    }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SBaier.DI.Examples.Pooling
 {
-	public class BarInstaller : MonoInstaller
+	internal class BarInstaller : MonoInstaller
 	{
 		[SerializeField]
 		private Bar _bar;

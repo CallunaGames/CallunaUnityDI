@@ -18,14 +18,15 @@ namespace SBaier.DI
         private SceneInjector _injector;
         private Scene _scene;
         private SceneContextProvider _sceneContextProvider;
-        private SceneObjectsDisabler _sceneDisabler;
+        private SceneObjectsLifeCycleActionCaller<Cleanable> _sceneCleaner;
+        private SceneObjectsLifeCycleActionCaller<Initializable> _sceneInitializer;
 
         public string ID => _iD;
         public string ParentContextID => _parentContextID;
 
         private void Awake()
         {
-            AppContext appContext = FindOrCreateAppContext();
+            AppContext appContext = new AppContextProvider().FindOrCreateAppContext();
             Resolver parentResolver = appContext.GetResolverFor(this);
             Init(parentResolver);
         }
@@ -35,29 +36,14 @@ namespace SBaier.DI
             _dIContext = CreateDIContext(resolver);
             InstallSceneContextBindings();
 			ResolveDependencies();
-			AddToProvider();
+            _sceneContextProvider.Add(this);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            RemoveFromProvider();
+            _sceneContextProvider.Remove(this);
         }
-
-        private void OnApplicationQuit()
-        {
-            DisableSceneObjects();
-        }
-
-        private void AddToProvider()
-		{
-			_sceneContextProvider.Add(this);
-		}
-
-		private void RemoveFromProvider()
-		{
-			_sceneContextProvider.Remove(this);
-		}
 
         private ChildDIContext CreateDIContext(Resolver resolver)
 		{
@@ -76,7 +62,8 @@ namespace SBaier.DI
             _injector = _resolver.Resolve<SceneInjector>();
             _scene = _resolver.Resolve<Scene>();
             _sceneContextProvider = _resolver.Resolve<SceneContextProvider>();
-            _sceneDisabler = _resolver.Resolve<SceneObjectsDisabler>();
+            _sceneCleaner = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Cleanable>>();
+            _sceneInitializer = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Initializable>>();
         }
 
         protected override void DoInjection()
@@ -84,28 +71,19 @@ namespace SBaier.DI
             _injector.InjectIntoRootObjectsOf(_scene, _resolver);
         }
 
+        protected override void InitializeObjects()
+        {
+            _sceneInitializer.PerformActionOnObjectsOf(_scene);
+        }
+
+        protected override void CleanObjects()
+        {
+            _sceneCleaner.PerformActionOnObjectsOf(_scene);
+        }
+
         protected override ContextAlreadyInitializedException CreateContextAlreadyInitializedException()
         {
             return new SceneContextAlreadyInitializedException(name);
-        }
-
-        private AppContext FindOrCreateAppContext()
-        {
-            AppContext appContext = FindObjectOfType<AppContext>();
-            if (appContext == null)
-                appContext = CreateAppContext();
-            return appContext;
-        }
-
-        private AppContext CreateAppContext()
-        {
-            GameObject appContextObject = new GameObject(nameof(AppContext));
-            return appContextObject.AddComponent<AppContext>();
-        }
-
-        private void DisableSceneObjects()
-        {
-            _sceneDisabler.DisableObjectsOf(_scene);
         }
     }
 }
