@@ -15,6 +15,7 @@ namespace SBaier.DI
                 .WithArgument(_prefab);
             
             binder.Bind<Pool<TItem>>()
+                .And<Pool<TItem, PrefabInstantiationArguments>>()
                 .ToNew<MonoPool<TItem>>()
                 .WithArgument(_prefab)
                 .AsSingle();
@@ -34,6 +35,7 @@ namespace SBaier.DI
                 .WithArgument(_prefab);
             
             binder.Bind<Pool<TItem, TArgument>>()
+                .And<Pool<TItem, TArgument, PrefabInstantiationArguments>>()
                 .ToNew<MonoPool<TItem, TArgument>>()
                 .WithArgument(_prefab)
                 .AsSingle();
