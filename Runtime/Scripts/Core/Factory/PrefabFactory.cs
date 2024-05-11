@@ -20,11 +20,11 @@ namespace SBaier.DI
 			BaseResolver = resolver;
 		}
 
-		protected TPrefab CreateInstance(Resolver resolver, Transform parent = null)
+		protected TPrefab CreateInstance(Resolver resolver, PrefabInstantiationArguments args = default)
 		{
 			try
 			{
-				TPrefab result = Object.Instantiate(_prefab, parent);
+				TPrefab result = Object.Instantiate(_prefab, args.Position, args.Rotation, args.Parent);
 				_injector.InjectIntoContextHierarchy(result.transform, resolver);
 				_gameObjectInitializer.PerformLifeCycleActionOnHierarchy(result.transform);
 				return result;
@@ -40,23 +40,23 @@ namespace SBaier.DI
 	public class PrefabFactory<TPrefab> : 
 		PrefabFactoryBase<TPrefab>, 
 		Factory<TPrefab>, 
-		Factory<TPrefab, Transform> where TPrefab : Component
+		Factory<TPrefab, PrefabInstantiationArguments> where TPrefab : Component
 	{
 		public TPrefab Create()
 		{
 			return CreateInstance(BaseResolver);
 		}
 
-		public TPrefab Create(Transform parent)
+		public TPrefab Create(PrefabInstantiationArguments instantiationArgs)
 		{
-			return CreateInstance(BaseResolver, parent);
+			return CreateInstance(BaseResolver, instantiationArgs);
 		}
 	}
 
 	public class PrefabFactory<TPrefab, TArg> : 
 		PrefabFactoryBase<TPrefab>, 
 		Factory<TPrefab, TArg>,
-		Factory<TPrefab, TArg, Transform> where TPrefab : Component
+		Factory<TPrefab, TArg, PrefabInstantiationArguments> where TPrefab : Component
 	{
 		private const int _argumentsCount = 1;
 
@@ -65,9 +65,9 @@ namespace SBaier.DI
 			return CreateInstance(CreateResolver(arg));
 		}
 
-		public TPrefab Create(TArg arg, Transform parent)
+		public TPrefab Create(TArg arg, PrefabInstantiationArguments instantiationArgs)
 		{
-			return CreateInstance(CreateResolver(arg), parent);
+			return CreateInstance(CreateResolver(arg), instantiationArgs);
 		}
 
 		private Resolver CreateResolver(TArg arg)

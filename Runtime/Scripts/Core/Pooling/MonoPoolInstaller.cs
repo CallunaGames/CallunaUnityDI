@@ -10,7 +10,7 @@ namespace SBaier.DI
         public override void InstallBindings(Binder binder)
         {
             binder.Bind<Factory<TItem>>()
-                .And<Factory<TItem, Transform>>()
+                .And<Factory<TItem, PrefabInstantiationArguments>>()
                 .ToNew<PrefabFactory<TItem>>()
                 .WithArgument(_prefab);
             
@@ -29,7 +29,7 @@ namespace SBaier.DI
         public override void InstallBindings(Binder binder)
         {
             binder.Bind<Factory<TItem, TArgument>>()
-                .And<Factory<TItem, TArgument, Transform>>()
+                .And<Factory<TItem, TArgument, PrefabInstantiationArguments>>()
                 .ToNew<PrefabFactory<TItem, TArgument>>()
                 .WithArgument(_prefab);
             
