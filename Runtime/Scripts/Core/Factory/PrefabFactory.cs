@@ -55,7 +55,7 @@ namespace SBaier.DI
 						Object.Instantiate(_prefab, args.Position.Value, Quaternion.identity, args.Parent),
 					{ Rotation: not null } =>
 						Object.Instantiate(_prefab, _prefab.transform.position, args.Rotation.Value, args.Parent),
-					_ => Object.Instantiate(_prefab, args.Parent)
+					_ => Object.Instantiate(_prefab, args.Parent, false)
 				};
 			}
 

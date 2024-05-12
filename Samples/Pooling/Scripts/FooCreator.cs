@@ -36,11 +36,7 @@ namespace SBaier.DI.Examples.Pooling
         {
             if (HasFoo)
                 return;
-            _currentFoo = _pool.Request(new PrefabInstantiationArguments()
-                { Parent = _fooHook, FitRectTransform = true });
-            RectTransform rectTransform = (RectTransform)_currentFoo.transform;
-            rectTransform.sizeDelta = Vector2.one;
-            rectTransform.anchoredPosition = Vector2.zero;
+            _currentFoo = _pool.Request(PrefabInstantiationArguments.CreateFittedUIArgs(_fooHook));
             UpdateInteractable();
         }
 
