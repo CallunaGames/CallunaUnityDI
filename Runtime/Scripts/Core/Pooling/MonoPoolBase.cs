@@ -27,11 +27,13 @@ namespace SBaier.DI
 			_prefabHash = _prefab.GetHashCode();
 		}
 
-		protected TItem TakeItem(Resolver resolver)
+		protected TItem TakeItem(Resolver resolver, PrefabInstantiationArguments instantiationArguments)
 		{
 			TItem item = _cache.Take<TItem>(_prefabHash);
-			_injector.InjectIntoContextHierarchy(item.transform, resolver);
-			_gameObjectInitializer.PerformLifeCycleActionOnHierarchy(item.transform);
+			Transform itemTransform = item.transform;
+			InitItem(itemTransform, instantiationArguments);
+			_injector.InjectIntoContextHierarchy(itemTransform, resolver);
+			_gameObjectInitializer.PerformActionOnHierarchy(itemTransform);
 			_objectActivator.Activate(item.gameObject);
 			return item;
 		}
@@ -39,10 +41,44 @@ namespace SBaier.DI
 		public void Return(TItem item)
 		{
 			GameObject gameObject = item.gameObject;
-			_gameObjectCleaner.PerformLifeCycleActionOnHierarchy(item.transform);
+			_gameObjectCleaner.PerformActionOnHierarchy(item.transform);
 			_objectActivator.Disable(gameObject);
 			_reseter.Reset(gameObject);
 			_cache.Store(_prefabHash, item);
+		}
+
+		private void InitItem(Transform item, PrefabInstantiationArguments args)
+		{
+			if (args.WorldPositionStays.HasValue && args.WorldPositionStays.Value)
+			{
+				item.SetParent(args.Parent, true);
+			}
+			else
+			{
+				item.SetParent(args.Parent);
+				if (args.Position.HasValue)
+				{
+					item.position = args.Position.Value;
+				}
+			}
+
+			if (args.Rotation.HasValue)
+			{
+				item.rotation = args.Rotation.Value;
+			}
+
+			if (args.Scale.HasValue)
+			{
+				item.localScale = args.Scale.Value;
+			}
+
+			if (args.FitRectTransform.HasValue &&
+			    args.FitRectTransform.Value &&
+			    item.transform is RectTransform rectTransform)
+			{
+				rectTransform.sizeDelta = Vector2.one;
+				rectTransform.anchoredPosition = Vector2.zero;
+			}
 		}
 	}
 }

@@ -6,12 +6,12 @@ namespace SBaier.DI
     {
         protected abstract bool Reverse { get; }
         
-        public void PerformLifeCycleActionOnHierarchy(Transform transform)
+        public void PerformActionOnHierarchy(Transform transform)
         {
             if(!Reverse)
                 Clean(transform.GetComponents<TActionHolder>());
             foreach (Transform child in transform)
-                PerformLifeCycleActionOnHierarchy(child);
+                PerformActionOnHierarchy(child);
             if(Reverse)
                 Clean(transform.GetComponents<TActionHolder>());
         }

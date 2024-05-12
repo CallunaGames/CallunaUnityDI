@@ -20,13 +20,15 @@ namespace SBaier.DI
 			BaseResolver = resolver;
 		}
 
-		protected TPrefab CreateInstance(Resolver resolver, PrefabInstantiationArguments args = default)
+		protected TPrefab CreateInstance(Resolver resolver, 
+			PrefabInstantiationArguments args)
 		{
 			try
 			{
-				TPrefab result = Object.Instantiate(_prefab, args.Position, args.Rotation, args.Parent);
-				_injector.InjectIntoContextHierarchy(result.transform, resolver);
-				_gameObjectInitializer.PerformLifeCycleActionOnHierarchy(result.transform);
+				TPrefab result = CreateInstance(args);
+				Transform resultTransform = result.transform;
+				_injector.InjectIntoContextHierarchy(resultTransform, resolver);
+				_gameObjectInitializer.PerformActionOnHierarchy(resultTransform);
 				return result;
 			}
 			catch (Exception)
@@ -34,6 +36,43 @@ namespace SBaier.DI
 				Debug.LogError($"Failed to create an instance of {_prefab.name}");
 				throw;
 			}
+		}
+
+		private TPrefab CreateInstance(PrefabInstantiationArguments args)
+		{
+			TPrefab result;
+			if (args.WorldPositionStays.HasValue && args.WorldPositionStays.Value)
+			{
+				result = Object.Instantiate(_prefab, args.Parent, true);
+			}
+			else
+			{
+				result = args switch
+				{
+					{ Position: not null, Rotation: not null } =>
+						Object.Instantiate(_prefab, args.Position.Value, args.Rotation.Value, args.Parent),
+					{ Position: not null } =>
+						Object.Instantiate(_prefab, args.Position.Value, Quaternion.identity, args.Parent),
+					{ Rotation: not null } =>
+						Object.Instantiate(_prefab, _prefab.transform.position, args.Rotation.Value, args.Parent),
+					_ => Object.Instantiate(_prefab, args.Parent)
+				};
+			}
+
+			if (args.Scale.HasValue)
+			{
+				result.transform.localScale = args.Scale.Value;
+			}
+
+			if (args.FitRectTransform.HasValue &&
+			    args.FitRectTransform.Value &&
+			    result.transform is RectTransform rectTransform)
+			{
+				rectTransform.sizeDelta = Vector2.one;
+				rectTransform.anchoredPosition = Vector2.zero;
+			}
+
+			return result;
 		}
 	}
 
@@ -44,7 +83,7 @@ namespace SBaier.DI
 	{
 		public TPrefab Create()
 		{
-			return CreateInstance(BaseResolver);
+			return CreateInstance(BaseResolver, default);
 		}
 
 		public TPrefab Create(PrefabInstantiationArguments instantiationArgs)
@@ -62,7 +101,7 @@ namespace SBaier.DI
 
 		public TPrefab Create(TArg arg)
 		{
-			return CreateInstance(CreateResolver(arg));
+			return CreateInstance(CreateResolver(arg), default);
 		}
 
 		public TPrefab Create(TArg arg, PrefabInstantiationArguments instantiationArgs)

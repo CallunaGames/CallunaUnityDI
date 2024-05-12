@@ -15,7 +15,7 @@ namespace SBaier.DI
         public void PerformActionOnObjectsOf(Scene scene)
         {
             foreach (GameObject sceneObject in scene.GetRootGameObjects())
-                _caller.PerformLifeCycleActionOnHierarchy(sceneObject.transform);
+                _caller.PerformActionOnHierarchy(sceneObject.transform);
         }
     }
 }

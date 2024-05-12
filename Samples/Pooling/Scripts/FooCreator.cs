@@ -4,59 +4,59 @@ using UnityEngine.UI;
 
 namespace SBaier.DI.Examples.Pooling
 {
-	internal class FooCreator : MonoBehaviour, Injectable
+    internal class FooCreator : MonoBehaviour, Injectable
     {
-        [SerializeField]
-        private Button _addButton;
-        [SerializeField]
-        private Button _removeButton;
-		[SerializeField]
-		private Transform _fooHook;
+        [SerializeField] private Button _addButton;
+        [SerializeField] private Button _removeButton;
+        [SerializeField] private Transform _fooHook;
 
-        private Pool<Foo> _pool;
-		private Foo _currentFoo;
-		private bool HasFoo => _currentFoo != null;
+        private Pool<Foo, PrefabInstantiationArguments> _pool;
+        private Foo _currentFoo;
+        private bool HasFoo => _currentFoo != null;
 
-		public void Inject(Resolver resolver)
-		{
-            _pool = resolver.Resolve<Pool<Foo>>();
+        public void Inject(Resolver resolver)
+        {
+            _pool = resolver.Resolve<Pool<Foo, PrefabInstantiationArguments>>();
         }
 
-		private void OnEnable()
-		{
-			_addButton.onClick.AddListener(AddFoo);
-			_removeButton.onClick.AddListener(RemoveFoo);
-			UpdateInteractable();
-		}
+        private void OnEnable()
+        {
+            _addButton.onClick.AddListener(AddFoo);
+            _removeButton.onClick.AddListener(RemoveFoo);
+            UpdateInteractable();
+        }
 
-		private void OnDisable()
-		{
-			_addButton.onClick.RemoveListener(AddFoo);
-			_removeButton.onClick.RemoveListener(RemoveFoo);
-		}
+        private void OnDisable()
+        {
+            _addButton.onClick.RemoveListener(AddFoo);
+            _removeButton.onClick.RemoveListener(RemoveFoo);
+        }
 
-		private void AddFoo()
-		{
-			if (HasFoo)
-				return;
-			_currentFoo = _pool.Request();
-			_currentFoo.transform.SetParent(_fooHook, false);
-			UpdateInteractable();
-		}
+        private void AddFoo()
+        {
+            if (HasFoo)
+                return;
+            _currentFoo = _pool.Request(new PrefabInstantiationArguments()
+                { Parent = _fooHook, FitRectTransform = true });
+            RectTransform rectTransform = (RectTransform)_currentFoo.transform;
+            rectTransform.sizeDelta = Vector2.one;
+            rectTransform.anchoredPosition = Vector2.zero;
+            UpdateInteractable();
+        }
 
-		private void RemoveFoo()
-		{
-			if (!HasFoo)
-				return;
-			_pool.Return(_currentFoo);
-			_currentFoo = null;
-			UpdateInteractable();
-		}
+        private void RemoveFoo()
+        {
+            if (!HasFoo)
+                return;
+            _pool.Return(_currentFoo);
+            _currentFoo = null;
+            UpdateInteractable();
+        }
 
-		private void UpdateInteractable()
-		{
-			_addButton.interactable = !HasFoo;
-			_removeButton.interactable = HasFoo;
-		}
-	}
+        private void UpdateInteractable()
+        {
+            _addButton.interactable = !HasFoo;
+            _removeButton.interactable = HasFoo;
+        }
+    }
 }

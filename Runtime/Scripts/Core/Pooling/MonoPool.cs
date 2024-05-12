@@ -21,11 +21,14 @@ namespace SBaier.DI
 
 		public TItem Request(PrefabInstantiationArguments instantiationArguments)
 		{
-			return !HasStoredItem ? _factory.Create(instantiationArguments) : TakeItem(_resolver);
+			return !HasStoredItem ? 
+				_factory.Create(instantiationArguments) : 
+				TakeItem(_resolver, instantiationArguments);
 		}
     }
 
-	public class MonoPool<TItem, TArg> : MonoPoolBase<TItem>, Pool<TItem, TArg>, Pool<TItem, TArg, PrefabInstantiationArguments> where TItem : Component
+	public class MonoPool<TItem, TArg> : MonoPoolBase<TItem>, Pool<TItem, TArg>, Pool<TItem, TArg, PrefabInstantiationArguments> 
+		where TItem : Component
 	{
 		private const int _argumentsCount = 1;
 		
@@ -41,12 +44,14 @@ namespace SBaier.DI
 
 		public TItem Request(TArg arg)
 		{
-			return !HasStoredItem ? _factory.Create(arg, default) : TakeItem(CreateResolver(arg));
+			return Request(arg, default);
 		}
 
 		public TItem Request(TArg arg, PrefabInstantiationArguments instantiationArguments)
 		{
-			return !HasStoredItem ? _factory.Create(arg, instantiationArguments) : TakeItem(CreateResolver(arg));
+			return !HasStoredItem ? 
+				_factory.Create(arg, instantiationArguments) : 
+				TakeItem(CreateResolver(arg), instantiationArguments);
 		}
 
 		private ArgumentsResolver CreateResolver(TArg arg)
