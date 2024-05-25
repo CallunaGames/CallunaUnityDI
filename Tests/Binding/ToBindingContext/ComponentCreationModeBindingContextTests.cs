@@ -40,6 +40,12 @@ namespace SBaier.DI.Tests
             return result;
         }
 
+        [TearDown]
+        public void Teardown()
+        {
+            Clear(_createdObjects);
+        }
+
         private static void Clear(List<GameObject> objects)
         {
             Debug.Log("Clearing Objects");
