@@ -9,68 +9,71 @@ namespace SBaier.DI.Tests
 {
     public class ComponentCreationModeBindingContextTests
     {
-        private static List<GameObject> _createdObjects = new ();
         private ComponentCreationModeBindingContext<Foo> _context;
         private Mock<BindingStorage> _bindingStorageMock;
         private BindingStorage BindingStorage => _bindingStorageMock.Object;
         private Binding _binding;
         
-        public static GameObject[] CreateValidTestPrefabs()
+        public static Arguments[] CreateValidArguments()
         {
-            GameObject prefab1 = new GameObject("One");
-            prefab1.AddComponent<Foo>();
-            GameObject prefab2 = new GameObject("Two");
-            prefab2.AddComponent<Foo>();
-            prefab2.AddComponent<Bar>();
-            GameObject prefab3 = new GameObject("Three");
-            prefab3.AddComponent<Foo>();
-            GameObject[] result = { prefab1, prefab2, prefab3 };
-            _createdObjects.AddRange(result);
-            return result;
-        }
-
-        public static GameObject[] CreateTestPrefabsWithoutComponent()
-        {
-            GameObject prefab1 = new GameObject("One");
-            GameObject prefab2 = new GameObject("Two");
-            prefab2.AddComponent<Bar>();
-            GameObject prefab3 = new GameObject("Three");
-            GameObject[] result = { prefab1, prefab2, prefab3 };
-            _createdObjects.AddRange(result);
-            return result;
-        }
-
-        [TearDown]
-        public void Teardown()
-        {
-            Clear(_createdObjects);
-        }
-
-        private static void Clear(List<GameObject> objects)
-        {
-            Debug.Log("Clearing Objects");
-            foreach (GameObject createdObject in objects)
+            return new Arguments[]
             {
-                Object.Destroy(createdObject);
-            }
-            objects.Clear();
+                new Arguments
+                {
+                    Name = "One",
+                    Types = new List<Type>() { typeof(Foo) }
+                },
+                new Arguments
+                {
+                    Name = "Two",
+                    Types = new List<Type>() { typeof(Foo), typeof(Bar) }
+                },
+                new Arguments
+                {
+                    Name = "Three",
+                    Types = new List<Type>() { typeof(Foo) }
+                },
+            };
+        }
+
+        public static Arguments[] CreateInvalidArguments()
+        {
+            return new Arguments[]
+            {
+                new Arguments
+                {
+                    Name = "One",
+                    Types = new List<Type>() { }
+                },
+                new Arguments
+                {
+                    Name = "Two",
+                    Types = new List<Type>() { typeof(Bar) }
+                },
+                new Arguments
+                {
+                    Name = "Three",
+                    Types = new List<Type>() { }
+                },
+            };
         }
 
         [Test]
         public void FromNewPrefabInstance_ThrowsExceptionIfPrefabDoesNotHaveComponent(
-            [ValueSource(nameof(CreateTestPrefabsWithoutComponent))] GameObject prefab)
+            [ValueSource(nameof(CreateInvalidArguments))] Arguments args)
         {
-            Debug.Log(nameof(FromNewPrefabInstance_ThrowsExceptionIfPrefabDoesNotHaveComponent));
+            GameObject prefab = CreateFromArgs(args);
             GivenADefaultSetup();
             Action test = () => WhenFromNewPrefabInstanceIsCalled(prefab);
             ThenThrowsException<MissingComponentException>(test);
+            Object.DestroyImmediate(prefab);
         }
 
         [Test]
         public void FromNewPrefabInstance_SetsBindingCreationMode(
-            [ValueSource(nameof(CreateValidTestPrefabs))] GameObject prefab)
+            [ValueSource(nameof(CreateValidArguments))] Arguments args)
         {
-            Debug.Log(nameof(FromNewPrefabInstance_SetsBindingCreationMode));
+            GameObject prefab = CreateFromArgs(args);
             GivenADefaultSetup();
             WhenFromNewPrefabInstanceIsCalled(prefab);
             ThenCreationModeIsSetTo(InstanceCreationMode.FromPrefabInstance);
@@ -78,12 +81,24 @@ namespace SBaier.DI.Tests
 
         [Test]
         public void FromNewPrefabInstance_InstanceProvideFunctionReturnsPrefab(
-            [ValueSource(nameof(CreateValidTestPrefabs))] GameObject prefab)
+            [ValueSource(nameof(CreateValidArguments))] Arguments args)
         {
-            Debug.Log(nameof(FromNewPrefabInstance_InstanceProvideFunctionReturnsPrefab));
+            GameObject prefab = CreateFromArgs(args);
             GivenADefaultSetup();
             WhenFromNewPrefabInstanceIsCalled(prefab);
             ThenProvideInstanceFunctionReturns(prefab);
+            Object.DestroyImmediate(prefab);
+        }
+
+        private GameObject CreateFromArgs(Arguments args)
+        {
+            GameObject result = new GameObject(args.Name);
+            foreach (Type type in args.Types)
+            {
+                result.AddComponent(type);
+            }
+
+            return result;
         }
 
         private void GivenADefaultSetup()
@@ -133,5 +148,11 @@ namespace SBaier.DI.Tests
         public class Foo : MonoBehaviour{}
 
         public class Bar : MonoBehaviour{}
+
+        public struct Arguments
+        {
+            public string Name;
+            public List<Type> Types;
+        }
     }
 }
