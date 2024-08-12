@@ -21,7 +21,7 @@ namespace SBaier.DI
 
 		public TItem Request(PrefabInstantiationArguments instantiationArguments)
 		{
-			return !HasStoredItem ? 
+			return !HasStoredItem() ? 
 				_factory.Create(instantiationArguments) : 
 				TakeItem(_resolver, instantiationArguments);
 		}
@@ -49,7 +49,7 @@ namespace SBaier.DI
 
 		public TItem Request(TArg arg, PrefabInstantiationArguments instantiationArguments)
 		{
-			return !HasStoredItem ? 
+			return !HasStoredItem() ? 
 				_factory.Create(arg, instantiationArguments) : 
 				TakeItem(CreateResolver(arg), instantiationArguments);
 		}

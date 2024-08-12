@@ -6,15 +6,21 @@ namespace SBaier.DI
 		void Return(TItem item);
 	}
 
-	public interface Pool<TItem, TArg>
+	public interface Pool<TItem, in TArg>
 	{
 		TItem Request(TArg arg);
 		void Return(TItem item);
 	}
 
-	public interface Pool<TItem, TArg1, TArg2>
+	public interface Pool<TItem, in TArg1, in TArg2>
 	{
 		TItem Request(TArg1 arg1, TArg2 arg2);
+		void Return(TItem item);
+	}
+
+	public interface Pool<TItem, in TArg1, in TArg2, in TArg3>
+	{
+		TItem Request(TArg1 arg1, TArg2 arg2, TArg3 arg3);
 		void Return(TItem item);
 	}
 }
