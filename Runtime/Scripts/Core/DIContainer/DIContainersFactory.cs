@@ -17,7 +17,8 @@ namespace SBaier.DI
                 new NonLazyContainer(),
                 new DisposablesContainer(),
                 new ObjectsContainer(),
-                new GameObjectsContainer(_deactivator));
+                new GameObjectsContainer(_deactivator),
+                new CleanablesContainer());
         }
 	} 
 }

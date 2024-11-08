@@ -22,6 +22,7 @@ namespace SBaier.DI
         private DisposablesContainer _disposables => _container.DisposablesContainer;
         private ObjectsContainer _objects => _container.ObjectsContainer;
         private GameObjectsContainer _gameObjects => _container.GameObjectsContainer;
+        private CleanablesContainer _cleanables => _container.CleanablesContainer;
 
         void Injectable.Inject(Resolver resolver)
         {
@@ -40,6 +41,7 @@ namespace SBaier.DI
 
         void DIContext.Reset()
         {
+            _cleanables.Clean();
             _disposables.Dispose();
             _objects.Destroy();
             _container.Reset();
@@ -89,6 +91,7 @@ namespace SBaier.DI
         {
             TContract instance = _instanceFactory.Create<TContract>(Resolver, instantiationInfo);
             TryInjection(instance, instantiationInfo);
+            TryInitialize(instance);
             StoreInstance(instance, instantiationInfo);
             return instance;
         }
@@ -98,6 +101,7 @@ namespace SBaier.DI
             if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
                 return;
             TryAddDisposable(instance as IDisposable);
+            TryAddCleanable(instance);
             if (instance is Component component && !TryAddGameObject(component.gameObject, instantiationInfo))
                 _objects.Add(component);
         }
@@ -140,12 +144,26 @@ namespace SBaier.DI
         {
             if (!instantiationInfo.InjectionAllowed)
                 return;
-            if (instance is Component)
-                InjectIntoComponent(instance as Component, instantiationInfo);
-            else if (instance is GameObject)
-                InjectIntoGameObject(instance as GameObject, instantiationInfo);
+            if (instance is Component component)
+                InjectIntoComponent(component, instantiationInfo);
+            else if (instance is GameObject gameObject)
+                InjectIntoGameObject(gameObject, instantiationInfo);
             else
                 InjectIntoInstance(instance, instantiationInfo);
+        }
+
+        private void TryInitialize<TContract>(TContract instance)
+        {
+            if (instance is not Initializable initializable || instance is Component)
+                return;
+            initializable.Initialize();
+        }
+
+        private void TryAddCleanable<TContract>(TContract contract)
+        {
+            if (contract is not Cleanable cleanable || contract is Component)
+                return;
+            _cleanables.Add(cleanable);
         }
 
         private void InjectIntoGameObject(GameObject gameObject, InstantiationInfo instantiationInfo)

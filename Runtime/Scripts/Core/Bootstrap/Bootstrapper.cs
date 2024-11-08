@@ -32,7 +32,8 @@ namespace SBaier.DI
                 new NonLazyContainer(), 
                 new DisposablesContainer(), 
                 new ObjectsContainer(),
-                new GameObjectsContainer(contextReseter)));
+                new GameObjectsContainer(contextReseter),
+                new CleanablesContainer()));
             result.Add(new DIInstanceFactory());
             return result;
         }

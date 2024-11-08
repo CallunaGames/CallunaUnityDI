@@ -6,7 +6,7 @@ namespace SBaier.DI
     {
         public AppContext FindOrCreateAppContext()
         {
-            AppContext appContext = Object.FindObjectOfType<AppContext>();
+            AppContext appContext = Object.FindFirstObjectByType<AppContext>();
             if (appContext == null)
                 appContext = CreateAppContext();
             return appContext;

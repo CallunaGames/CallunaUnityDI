@@ -10,13 +10,15 @@ namespace SBaier.DI
         public DisposablesContainer DisposablesContainer { get; }
         public ObjectsContainer ObjectsContainer { get; }
 		internal GameObjectsContainer GameObjectsContainer { get; }
+		internal CleanablesContainer CleanablesContainer { get; }
 
 		public DIContainers(BindingsContainer bindings,
             SingleInstancesContainer singleInstances,
             NonLazyContainer nonLazyBindings,
             DisposablesContainer disposablesContainer,
             ObjectsContainer objectsContainer,
-            GameObjectsContainer gameObjectsContainer)
+            GameObjectsContainer gameObjectsContainer,
+            CleanablesContainer cleanablesContainer)
 		{
             Bindings = bindings;
             SingleInstances = singleInstances;
@@ -24,7 +26,8 @@ namespace SBaier.DI
             DisposablesContainer = disposablesContainer;
             ObjectsContainer = objectsContainer;
             GameObjectsContainer = gameObjectsContainer;
-        }
+            CleanablesContainer = cleanablesContainer;
+		}
 
 		public void AddBinding<TContract>(Binding binding, IComparable iD = null)
 		{
@@ -49,6 +52,7 @@ namespace SBaier.DI
             DisposablesContainer.Clear();
 			ObjectsContainer.Clear();
             GameObjectsContainer.Clear();
-        }
+            CleanablesContainer.Clear();
+		}
 	}
 }
