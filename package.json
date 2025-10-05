@@ -1,12 +1,12 @@
 {
-  "name": "com.sbaier.unitydi",
+  "name": "com.calluna.di",
   "version": "1.4.5",
   "displayName": "Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
-  "unity": "2021.2",
+  "unity": "6000.58f2",
   "unityRelease": "",
-  "documentationUrl": "https://github.com/BlackLambert/unity-di-package",
-  "changelogUrl": "https://github.com/BlackLambert/unity-di-package/releases/tag/v1.4.5",
+  "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
+  "changelogUrl": "",
   "licensesUrl": "",
   "dependencies": {
     "nuget.moq": "1.0.0"
@@ -16,8 +16,8 @@
     "dependency inversion"
   ],
   "author": {
-    "name": "Sebastian Baier",
-    "email": "sebastian.baier93@hotmail.de",
+    "name": "Calluna Games",
+    "email": "",
     "url": ""
   }
 }
