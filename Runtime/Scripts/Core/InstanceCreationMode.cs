@@ -1,5 +1,5 @@
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public enum InstanceCreationMode
     {

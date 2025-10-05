@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Examples
+namespace Calluna.DI.Examples
 {
 	public class Foo : MonoBehaviour, Injectable
 	{

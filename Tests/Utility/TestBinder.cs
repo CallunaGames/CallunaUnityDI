@@ -2,7 +2,7 @@ using Moq;
 using System;
 using System.Collections.Generic;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
 	public class TestBinder : Binder
 	{

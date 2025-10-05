@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class AbstractMonoPoolInstaller<TItem, TComparable> : MonoInstaller 
         where TItem : Component, AbstractPoolItem<TComparable>

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class AppContextInstaller : Installer
     {

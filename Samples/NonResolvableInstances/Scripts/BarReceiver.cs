@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Examples.NonResolvableInstances
+namespace Calluna.DI.Examples.NonResolvableInstances
 {
 	public class BarReceiver : MonoBehaviour, Injectable
 	{

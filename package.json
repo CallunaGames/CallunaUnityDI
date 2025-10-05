@@ -1,9 +1,9 @@
 {
   "name": "com.calluna.di",
-  "version": "1.4.5",
-  "displayName": "Unity Dependency Injection",
+  "version": "1.0.0",
+  "displayName": "Calluna Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
-  "unity": "6000.58f2",
+  "unity": "6000.58",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
   "changelogUrl": "",
@@ -17,7 +17,7 @@
   ],
   "author": {
     "name": "Calluna Games",
-    "email": "",
+    "email": "callunagames.temp@gmail.com",
     "url": ""
   }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-9999)]

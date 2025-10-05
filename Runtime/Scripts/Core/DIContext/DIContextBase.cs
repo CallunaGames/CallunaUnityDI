@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public abstract class DIContextBase : DIContext, Injectable
     {

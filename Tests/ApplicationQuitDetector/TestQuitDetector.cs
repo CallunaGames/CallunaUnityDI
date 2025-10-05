@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
     public class TestQuitDetector : QuitDetector
     {

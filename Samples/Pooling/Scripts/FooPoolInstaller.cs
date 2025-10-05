@@ -1,4 +1,4 @@
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
 	internal class FooPoolInstaller : MonoPoolInstaller<Foo>
 	{

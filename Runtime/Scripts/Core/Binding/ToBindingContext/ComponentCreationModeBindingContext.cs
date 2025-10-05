@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	public class ComponentCreationModeBindingContext<TConcrete> : 
 		CreationModeBindingContext<TConcrete> where TConcrete : Component

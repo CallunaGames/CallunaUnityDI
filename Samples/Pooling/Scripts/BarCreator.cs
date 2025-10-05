@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
 	internal class BarCreator : MonoBehaviour, Injectable, Initializable, Cleanable
     {

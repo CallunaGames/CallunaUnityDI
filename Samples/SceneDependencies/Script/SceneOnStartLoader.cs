@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SBaier.DI.Examples.SceneDependencies
+namespace Calluna.DI.Examples.SceneDependencies
 {
     public class SceneOnStartLoader : MonoBehaviour
     {

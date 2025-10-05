@@ -5,7 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
     public class ComponentCreationModeBindingContextTests
     {

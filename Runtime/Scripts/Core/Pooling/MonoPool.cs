@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	public class MonoPool<TItem> : MonoPoolBase<TItem>, Pool<TItem>, Pool<TItem, PrefabInstantiationArguments> where TItem : Component
     {

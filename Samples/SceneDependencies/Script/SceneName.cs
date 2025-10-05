@@ -1,4 +1,4 @@
-namespace SBaier.DI.Examples.SceneDependencies
+namespace Calluna.DI.Examples.SceneDependencies
 {
     public enum SceneName
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = System.Random;
 
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
     public class TreesCreator : MonoBehaviour, Injectable, Initializable, Cleanable
     {

@@ -1,4 +1,4 @@
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class DIContainersFactory : Factory<DIContainers>, Injectable
     {

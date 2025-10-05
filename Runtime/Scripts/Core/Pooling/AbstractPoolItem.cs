@@ -1,6 +1,6 @@
 using System;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public interface AbstractPoolItem<out TComparable> where TComparable : IComparable
     {

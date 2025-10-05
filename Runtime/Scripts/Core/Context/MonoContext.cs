@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     [DisallowMultipleComponent]
     public abstract class MonoContext : MonoBehaviour, Context

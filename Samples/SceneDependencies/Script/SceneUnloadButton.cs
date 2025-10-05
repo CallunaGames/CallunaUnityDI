@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace SBaier.DI.Examples.SceneDependencies
+namespace Calluna.DI.Examples.SceneDependencies
 {
     public class SceneUnloadButton : MonoBehaviour, Injectable
     {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	public class InvalidBindingException : InvalidOperationException
 	{

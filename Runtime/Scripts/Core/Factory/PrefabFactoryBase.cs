@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public abstract class PrefabFactoryBase : Injectable
     {

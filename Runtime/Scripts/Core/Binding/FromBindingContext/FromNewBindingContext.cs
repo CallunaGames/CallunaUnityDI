@@ -1,4 +1,4 @@
-namespace SBaier.DI
+namespace Calluna.DI
 {
 
 	public class FromNewBindingContext<TConcrete> : ArgumentsBindingContext where TConcrete : new()

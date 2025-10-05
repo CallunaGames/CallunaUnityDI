@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class DisposablesContainer 
     {

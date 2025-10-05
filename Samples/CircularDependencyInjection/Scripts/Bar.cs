@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Examples.CircularDependencyInjection
+namespace Calluna.DI.Examples.CircularDependencyInjection
 {
     public class Bar : Injectable
     {

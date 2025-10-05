@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     internal abstract class GameObjectLifeCycleActionCaller<TActionHolder>
     {

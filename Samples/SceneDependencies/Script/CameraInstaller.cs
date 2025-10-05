@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Examples.SceneDependencies
+namespace Calluna.DI.Examples.SceneDependencies
 {
 	public class CameraInstaller : MonoInstaller
 	{

@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using System;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
     public class BindingTests
     {

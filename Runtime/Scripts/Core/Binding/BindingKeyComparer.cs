@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class BindingKeyComparer : IEqualityComparer<BindingKey>
     {

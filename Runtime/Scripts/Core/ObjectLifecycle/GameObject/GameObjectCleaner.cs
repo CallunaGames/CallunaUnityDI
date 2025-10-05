@@ -1,4 +1,4 @@
-namespace SBaier.DI
+namespace Calluna.DI
 {
     internal class GameObjectCleaner : GameObjectLifeCycleActionCaller<Cleanable>
     {

@@ -3,7 +3,7 @@ using Moq;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
     public class DIContainerBinderTests
     {

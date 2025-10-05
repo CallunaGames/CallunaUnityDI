@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
     public class Tree : MonoBehaviour, AbstractPoolItem<TreeType>, Injectable
     {

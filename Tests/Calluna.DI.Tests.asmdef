@@ -1,10 +1,10 @@
 {
-    "name": "SBaier.DI.Tests",
-    "rootNamespace": "SBaier.DI.Tests",
+    "name": "Calluna.DI.Tests",
+    "rootNamespace": "Calluna.DI.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "SBaier.DI.Core"
+        "Calluna.DI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

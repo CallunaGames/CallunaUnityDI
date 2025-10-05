@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
 	internal class Bar : MonoBehaviour, Injectable, Initializable, Cleanable
 	{

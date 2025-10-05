@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	[Serializable]
 	public class AppContextAlreadyInitializedException : ContextAlreadyInitializedException

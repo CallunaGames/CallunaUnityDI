@@ -1,7 +1,7 @@
 using Moq;
 using NUnit.Framework;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
 	public class BindingContextTests
 	{

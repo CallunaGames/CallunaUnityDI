@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class Binding : InstantiationInfo
     {

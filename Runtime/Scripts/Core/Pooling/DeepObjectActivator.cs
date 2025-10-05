@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class DeepObjectActivator : ObjectActivator
     {

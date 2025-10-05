@@ -1,6 +1,6 @@
 using System;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public struct BindingKey
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class ConcreteBindingContext<Contract1> : ConcreteBindingContext<Contract1, Contract1, Contract1, Contract1, Contract1, Contract1, Contract1, Contract1>
     {

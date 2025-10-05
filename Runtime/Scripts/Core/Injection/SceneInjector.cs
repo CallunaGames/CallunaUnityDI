@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class SceneInjector : Injectable
     {

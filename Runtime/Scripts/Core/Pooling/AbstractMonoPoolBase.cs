@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     public class AbstractMonoPoolBase<TItem, TComparable> : MonoPoolBase
         where TItem : Component, AbstractPoolItem<TComparable>

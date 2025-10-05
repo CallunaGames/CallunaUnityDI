@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	public abstract class ScriptableObjectInstaller : ScriptableObject, Installer
 	{

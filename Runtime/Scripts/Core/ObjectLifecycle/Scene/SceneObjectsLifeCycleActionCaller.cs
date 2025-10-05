@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
     internal class SceneObjectsLifeCycleActionCaller<TActionHolder> : Injectable
     {

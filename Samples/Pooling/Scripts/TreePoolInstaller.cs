@@ -1,4 +1,4 @@
-namespace SBaier.DI.Examples.Pooling
+namespace Calluna.DI.Examples.Pooling
 {
     public class TreePoolInstaller : AbstractMonoPoolInstaller<Tree, TreeType ,Tree.Arguments>
     {

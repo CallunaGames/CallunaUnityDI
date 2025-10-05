@@ -2,7 +2,7 @@
 using UnityEditor;
 #endif
 
-namespace SBaier.DI
+namespace Calluna.DI
 {
 	public class EditorQuitDetector : QuitDetector
 	{

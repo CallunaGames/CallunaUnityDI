@@ -3,7 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace SBaier.DI.Tests
+namespace Calluna.DI.Tests
 {
     public class QuitDetectorTests
     {
