@@ -8,14 +8,17 @@ namespace Calluna.DI.Tests
     public class QuitDetectorTests
     {
         private TestQuitDetector _quitDetector;
+        private GameObject _quitDetectorGameObject;
         private bool _onQuitIsCalled = false;
 
         [TearDown]
         public void TearDown()
 		{
-            GameObject.Destroy(_quitDetector.gameObject);
-            _onQuitIsCalled = true;
             _quitDetector.OnQuit -= OnQuit;
+            GameObject.DestroyImmediate(_quitDetectorGameObject);
+            _onQuitIsCalled = true;
+            _quitDetector = null;
+            _quitDetectorGameObject = null;
         }
 
         [UnityTest]
@@ -47,8 +50,8 @@ namespace Calluna.DI.Tests
 
 		private void GivenADefaultSetup()
 		{
-            GameObject obj = new GameObject();
-            _quitDetector = obj.AddComponent<TestQuitDetector>();
+            _quitDetectorGameObject = new GameObject();
+            _quitDetector = _quitDetectorGameObject.AddComponent<TestQuitDetector>();
         }
 
         private void GivenOnQuitListener()

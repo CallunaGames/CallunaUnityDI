@@ -12,7 +12,7 @@ namespace Calluna.DI.Tests
         [TearDown]
         public void TearDown()
         {
-            GameObject.Destroy(_gameObject);
+            GameObject.DestroyImmediate(_gameObject);
         }
 
         [Test]
