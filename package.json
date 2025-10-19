@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "displayName": "Calluna Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
-  "unity": "6000.58",
+  "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
-  "changelogUrl": "",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/commits/v1.0.0",
   "licensesUrl": "",
   "dependencies": {
     "nuget.moq": "1.0.0"
