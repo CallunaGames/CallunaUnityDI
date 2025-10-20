@@ -1,17 +1,44 @@
 {
   "name": "com.calluna.di",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Calluna Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/commits/v1.0.0",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.0.0...v1.0.1",
   "licensesUrl": "",
   "dependencies": {
     "nuget.moq": "1.0.0"
- },
- "keywords": [
+  },
+  "samples": [
+    {
+      "displayName": "Circular Dependency Injection",
+      "description": "Example of a circular dependencies",
+      "path": "Samples~/CircularDependencyInjection"
+    },
+    {
+      "displayName": "Component On New Game Object",
+      "description": "Example of creating a bound MonoBehaviour on a new game object",
+      "path": "Samples~/ComponentOnNewGameObject"
+    },
+    {
+      "displayName": "Non Resolvable Instances",
+      "description": "Example of non resolvables bindings",
+      "path": "Samples~/NonResolvableInstances"
+    },
+    {
+      "displayName": "Pooling",
+      "description": "Example of object pooling",
+      "path": "Samples~/Pooling"
+    },
+    {
+      "displayName": "Scene Dependencies",
+      "description": "Example of scene dependencies",
+      "path": "Samples~/SceneDependencies"
+    }
+  ],
+  "keywords": [
     "dependency injection",
     "dependency inversion"
   ],
