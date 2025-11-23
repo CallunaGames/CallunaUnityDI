@@ -9,14 +9,14 @@ namespace Calluna.DI
         public void PerformActionOnHierarchy(Transform transform)
         {
             if(!Reverse)
-                Clean(transform.GetComponents<TActionHolder>());
+                PerformAction(transform.GetComponents<TActionHolder>());
             foreach (Transform child in transform)
                 PerformActionOnHierarchy(child);
             if(Reverse)
-                Clean(transform.GetComponents<TActionHolder>());
+                PerformAction(transform.GetComponents<TActionHolder>());
         }
 
-        private void Clean(TActionHolder[] actionHolders)
+        private void PerformAction(TActionHolder[] actionHolders)
         {
             foreach (TActionHolder actionHolder in actionHolders)
                 CallAction(actionHolder);

@@ -1,5 +1,9 @@
+using UnityEngine;
+
 namespace Calluna.DI
 {
+	[DisallowMultipleComponent]
+	[DefaultExecutionOrder(-9998)]
     public class GameObjectContext : MonoContext
     {
         private ChildDIContext _currentContext;

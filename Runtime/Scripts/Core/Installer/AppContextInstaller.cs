@@ -57,6 +57,9 @@ namespace Calluna.DI
             
             binder.Bind<ObjectActivator>()
                 .ToNew<BasicObjectActivator>();
+
+            binder.BindToNewSelf<GameObjectDestructor>()
+                .AsSingle();
             
             new BindingValidationInstaller()
                 .InstallBindings(binder);

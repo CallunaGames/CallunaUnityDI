@@ -29,9 +29,9 @@ namespace Calluna.DI
                 _gameObjectInitializer.PerformActionOnHierarchy(resultTransform);
                 return result;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Debug.LogError($"Failed to create an instance of {prefab.name}");
+                Debug.LogError($"Failed to create an instance of {prefab.name}.\nException: {e}");
                 throw;
             }
         }
