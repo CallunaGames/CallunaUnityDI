@@ -44,7 +44,7 @@ namespace Calluna.DI
 
         void Context.Reset()
         {
-            DoReset();
+            TryReset();
         }
 
         public Resolver GetResolver()
@@ -65,7 +65,6 @@ namespace Calluna.DI
 
         protected virtual void DoReset()
         {
-            ValidateResetCall();
             CleanObjects();
             DIContext.Reset();
             Initialized = false;
@@ -101,12 +100,6 @@ namespace Calluna.DI
         {
             if (Initialized)
                 throw CreateContextAlreadyInitializedException();
-        }
-
-        private void ValidateResetCall()
-        {
-            if (!Initialized)
-                throw new InvalidOperationException("Trying to reset an uninitialized context");
         }
 
         protected abstract ContextAlreadyInitializedException CreateContextAlreadyInitializedException();
