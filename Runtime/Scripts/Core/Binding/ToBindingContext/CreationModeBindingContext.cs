@@ -37,8 +37,8 @@ namespace Calluna.DI
 
         private void ValidateInstance(TConcrete instance)
         {
-            if (instance.Equals(null))
-                throw new ArgumentNullException();
+            if(instance == null)
+                throw new ArgumentNullException($"Failed to bind instance {nameof(instance)} of {typeof(TConcrete)}. The instance is null.");
         }
     }
 }

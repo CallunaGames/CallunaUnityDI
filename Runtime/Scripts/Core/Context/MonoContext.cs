@@ -7,8 +7,7 @@ namespace Calluna.DI
     [DisallowMultipleComponent]
     public abstract class MonoContext : MonoBehaviour, Context
     {
-        [SerializeField]
-        private MonoInstaller[] _monoInstallers = new MonoInstaller[0];
+        [SerializeField] private MonoInstaller[] _monoInstallers = new MonoInstaller[0];
 
         [SerializeField]
         private ScriptableObjectInstaller[] _scriptableObjectInstallers = new ScriptableObjectInstaller[0];
@@ -21,7 +20,7 @@ namespace Calluna.DI
         protected Binder _binder => DIContext.Binder;
 
 
-		public virtual void Init(Resolver baseResolver)
+        public virtual void Init(Resolver baseResolver)
         {
             ValidateInitCall();
             Initialized = true;
@@ -32,11 +31,15 @@ namespace Calluna.DI
             DIContext.CreateNonLazyInstances();
             InitializeObjects();
         }
-        
+
+        protected virtual void OnApplicationQuit()
+        {
+            TryReset();
+        }
+
         protected virtual void OnDestroy()
         {
-            if (Initialized)
-                DoReset();
+            TryReset();
         }
 
         void Context.Reset()
@@ -51,8 +54,22 @@ namespace Calluna.DI
 
         protected abstract void DoInit(Resolver resolver);
         protected abstract void DoInjection();
-        protected virtual void InitializeObjects() {}
-        protected virtual void CleanObjects() {}
+
+        protected virtual void InitializeObjects()
+        {
+        }
+
+        protected virtual void CleanObjects()
+        {
+        }
+
+        protected virtual void DoReset()
+        {
+            ValidateResetCall();
+            CleanObjects();
+            DIContext.Reset();
+            Initialized = false;
+        }
 
         private void InstallBindings()
         {
@@ -74,12 +91,10 @@ namespace Calluna.DI
             installer.InstallBindings(_binder);
         }
 
-        private void DoReset()
+        private void TryReset()
         {
-            ValidateResetCall();
-            Initialized = false;
-            DIContext.Reset();
-            CleanObjects();
+            if (Initialized)
+                DoReset();
         }
 
         private void ValidateInitCall()
@@ -97,4 +112,3 @@ namespace Calluna.DI
         protected abstract ContextAlreadyInitializedException CreateContextAlreadyInitializedException();
     }
 }
-

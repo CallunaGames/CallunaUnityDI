@@ -50,9 +50,7 @@ namespace Calluna.DI
 
         public FromInstanceBindingContext ToInstance<TConcrete>(TConcrete instance) where TConcrete : C1, C2, C3, C4, C5, C6, C7, C8
 		{
-            _binding.CreationMode = InstanceCreationMode.FromInstance;
-            _binding.ProvideInstanceFunction = () => instance;
-            return new FromInstanceBindingContext(_arguments);
+            return new CreationModeBindingContext<TConcrete>(_arguments).FromInstance(instance);
         }
 
         public CreationModeBindingContext<TConcrete> To<TConcrete>() where TConcrete : C1, C2, C3, C4, C5, C6, C7, C8
@@ -62,6 +60,7 @@ namespace Calluna.DI
 
         public FromNewBindingContext<TConcrete> ToNew<TConcrete>() where TConcrete : C1, C2, C3, C4, C5, C6, C7, C8, new()
         {
+            ValidateConstructableConcreteType(typeof(TConcrete));
             return new FromNewBindingContext<TConcrete>(_arguments);
         }
 
@@ -79,6 +78,12 @@ namespace Calluna.DI
 		{
             _arguments.Keys.Add(new BindingKey(typeof(TContract), iD));
             _bindingStorage.AddBinding<TContract>(_binding, iD);
+        }
+
+        private void ValidateConstructableConcreteType(Type type)
+        {
+            if(typeof(Component).IsAssignableFrom(type))
+                throw new ArgumentException($"Failed to bind concrete type {type} using a new instance. The provided type is not compatible.");
         }
     }
 }

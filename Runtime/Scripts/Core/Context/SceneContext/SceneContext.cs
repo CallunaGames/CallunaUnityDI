@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -39,12 +40,6 @@ namespace Calluna.DI
             _sceneContextProvider.Add(this);
         }
 
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            _sceneContextProvider.Remove(this);
-        }
-
         private ChildDIContext CreateDIContext(Resolver resolver)
 		{
             Factory<ChildDIContext, Resolver> contextFactory = resolver.Resolve<Factory<ChildDIContext, Resolver>>();
@@ -84,6 +79,12 @@ namespace Calluna.DI
         protected override ContextAlreadyInitializedException CreateContextAlreadyInitializedException()
         {
             return new SceneContextAlreadyInitializedException(name);
+        }
+
+        protected override void DoReset()
+        {
+            _sceneContextProvider.Remove(this);
+            base.DoReset();
         }
     }
 }

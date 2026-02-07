@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using UnityEngine;
+using Object = System.Object;
 
 namespace Calluna.DI
 {
@@ -10,7 +13,19 @@ namespace Calluna.DI
         {
             foreach (Cleanable cleanable in _cleanables)
             {
+                TryClean(cleanable);
+            }
+        }
+
+        private void TryClean(Cleanable cleanable)
+        {
+            try
+            {
                 cleanable.Clean();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
 

@@ -156,7 +156,15 @@ namespace Calluna.DI
         {
             if (instance is not Initializable initializable || instance is Component)
                 return;
-            initializable.Initialize();
+            
+            try
+            {
+                initializable.Initialize();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         private void TryAddCleanable<TContract>(TContract contract)
