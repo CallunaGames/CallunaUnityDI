@@ -7,6 +7,7 @@ namespace Calluna.DI
 {
     public class CleanablesContainer
     {
+        public IEnumerable<Cleanable> Values => _cleanables;
         private List<Cleanable> _cleanables = new ();
 
         public void Clean()
@@ -32,6 +33,11 @@ namespace Calluna.DI
         public void Add(Cleanable cleanable)
         {
             _cleanables.Add(cleanable);
+        }
+
+        public void Add(IEnumerable<Cleanable> cleanables)
+        {
+            _cleanables.AddRange(cleanables);
         }
         
         public void Clear()

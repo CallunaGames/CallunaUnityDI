@@ -7,6 +7,8 @@
         void ValidateBindings();
         void CreateNonLazyInstances();
         TContract GetInstance<TContract>(Binding binding);
+        void Clear();
 		void Reset();
-	}
+		void TransferInstancesOf(DIContainers containers);
+    }
 }

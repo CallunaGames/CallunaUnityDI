@@ -26,7 +26,7 @@ namespace Calluna.DI
 
         private void InstallAppContextBindings()
         {
-            AppContextInstaller installer = new AppContextInstaller(_dIContext, gameObject);
+            AppContextInstaller installer = new AppContextInstaller(gameObject);
             installer.InstallBindings(_binder);
         }
 

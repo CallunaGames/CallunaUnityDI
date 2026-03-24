@@ -5,6 +5,7 @@ namespace Calluna.DI
         public FromInstanceBindingContext(BindingArguments bindingArguments) : base(bindingArguments) 
         {
             _binding.InjectionAllowed = false;
+            _binding.AmountMode = InstanceAmountMode.Single;
         }
 
         public void WithoutInjection()

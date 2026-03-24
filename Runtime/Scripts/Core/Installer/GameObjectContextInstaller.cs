@@ -13,7 +13,7 @@ namespace Calluna.DI
 
         public void InstallBindings(Binder binder)
         {
-            binder.BindInstance(_diContext).WithoutInjection();
+            
         }
     }
 }

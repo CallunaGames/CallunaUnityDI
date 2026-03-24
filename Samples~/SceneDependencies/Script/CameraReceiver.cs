@@ -21,7 +21,8 @@ namespace Calluna.DI.Examples.SceneDependencies
 
 		private void OnDisable()
 		{
-			Debug.Log($"OnDisable: {nameof(CameraReceiver)} of Scene {_scene.name} has resolved camera with name {_cam.name}");
+			if(_cam)
+				Debug.Log($"OnDisable: {nameof(CameraReceiver)} of Scene {_scene.name} has resolved camera with name {_cam.name}");
 		}
 	}
 }
