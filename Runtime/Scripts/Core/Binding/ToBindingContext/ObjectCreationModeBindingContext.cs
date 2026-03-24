@@ -6,12 +6,12 @@ namespace Calluna.DI
     {
         public ObjectCreationModeBindingContext(BindingArguments arguments) : base(arguments) { }
 
-        public ArgumentsBindingContext FromResources(string path)
+        public AllowInjectionBindingContext FromResources(string path)
         {
             ValidateRessource(path);
             _binding.CreationMode = InstanceCreationMode.FromResources;
             _binding.ProvideInstanceFunction = () => Resources.Load<TConcrete>(path);
-            return new ArgumentsBindingContext(_arguments);
+            return new AllowInjectionBindingContext(_arguments);
         }
 
         private void ValidateRessource(string path)

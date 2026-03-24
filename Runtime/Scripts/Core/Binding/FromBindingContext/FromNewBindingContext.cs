@@ -1,7 +1,7 @@
 namespace Calluna.DI
 {
 
-	public class FromNewBindingContext<TConcrete> : ArgumentsBindingContext where TConcrete : new()
+	public class FromNewBindingContext<TConcrete> : AllowInjectionBindingContext where TConcrete : new()
 	{
 		public FromNewBindingContext(BindingArguments arguments) : base(arguments)
 		{

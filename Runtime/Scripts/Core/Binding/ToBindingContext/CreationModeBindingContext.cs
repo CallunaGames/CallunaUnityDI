@@ -22,17 +22,17 @@ namespace Calluna.DI
 			return new FromInstanceBindingContext(_arguments);
 		}
 
-		public ArgumentsBindingContext FromMethod(Func<TConcrete> create)
+		public AllowInjectionBindingContext FromMethod(Func<TConcrete> create)
         {
             _binding.CreationMode = InstanceCreationMode.FromMethod;
             _binding.ProvideInstanceFunction = () => create();
-            return new ArgumentsBindingContext(_arguments);
+            return new AllowInjectionBindingContext(_arguments);
         }
 
-        public ArgumentsBindingContext FromFactory()
+        public AllowInjectionBindingContext FromFactory()
         {
             _binding.CreationMode = InstanceCreationMode.FromFactory;
-            return new ArgumentsBindingContext(_arguments);
+            return new AllowInjectionBindingContext(_arguments);
         }
 
         private void ValidateInstance(TConcrete instance)
