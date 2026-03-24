@@ -5,6 +5,7 @@ namespace Calluna.DI
 {
 	public class GameObjectsContainer
 	{
+		public IEnumerable<GameObject> Values => _objects;
         private HashSet<GameObject> _objects = new HashSet<GameObject>();
         private GameObjectContextsReseter _reseter;
 
@@ -16,6 +17,14 @@ namespace Calluna.DI
         public void Add(GameObject gameObject)
         {
             _objects.Add(gameObject);
+        }
+
+        public void Add(IEnumerable<GameObject> gameObjects)
+        {
+	        foreach (GameObject obj in gameObjects)
+	        {
+		        _objects.Add(obj);
+	        }
         }
 
         public void Clear()

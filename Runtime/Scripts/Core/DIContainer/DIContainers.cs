@@ -44,7 +44,7 @@ namespace Calluna.DI
             Bindings.Remove(key);
         }
 
-		public void Reset()
+		public void Clear()
 		{
             Bindings.Clear();
             SingleInstances.Clear();

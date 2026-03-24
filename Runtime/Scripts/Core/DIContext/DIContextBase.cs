@@ -5,7 +5,7 @@ namespace Calluna.DI
 {
     public abstract class DIContextBase : DIContext, Injectable
     {
-        private DIContainers _container;
+        protected DIContainers _containers;
         private DIInstanceFactory _instanceFactory;
         private InstantiationInfoValidator _bindingValidator;
         private GameObjectInjector _gameObjectInjector;
@@ -16,27 +16,33 @@ namespace Calluna.DI
         public Resolver Resolver => _dIContainerResolver;
         public Binder Binder => _dIContainerBinder;
 
-        private BindingsContainer _bindings => _container.Bindings;
-        private NonLazyContainer _nonLazyBindings => _container.NonLazyInstanceInfos;
-        private SingleInstancesContainer _singleInstances => _container.SingleInstances;
-        private DisposablesContainer _disposables => _container.DisposablesContainer;
-        private ObjectsContainer _objects => _container.ObjectsContainer;
-        private GameObjectsContainer _gameObjects => _container.GameObjectsContainer;
-        private CleanablesContainer _cleanables => _container.CleanablesContainer;
+        private BindingsContainer _bindings => _containers.Bindings;
+        private NonLazyContainer _nonLazyBindings => _containers.NonLazyInstanceInfos;
+        private SingleInstancesContainer _singleInstances => _containers.SingleInstances;
+        private DisposablesContainer _disposables => _containers.DisposablesContainer;
+        private ObjectsContainer _objects => _containers.ObjectsContainer;
+        private GameObjectsContainer _gameObjects => _containers.GameObjectsContainer;
+        private CleanablesContainer _cleanables => _containers.CleanablesContainer;
 
         void Injectable.Inject(Resolver resolver)
         {
             DoInjection(resolver);
-            _dIContainerResolver = CreateResolver(_bindings, this);
-            _dIContainerBinder = new DIContainerBinder(_container);
+            _dIContainerResolver = CreateResolver(_bindings);
+            _dIContainerBinder = new DIContainerBinder(_containers);
+            _dIContainerBinder.Bind<DIContext>().ToInstance(this);
         }
 
         protected virtual void DoInjection(Resolver resolver)
         {
-            _container = resolver.Resolve<DIContainers>();
+            _containers = resolver.Resolve<DIContainers>();
             _instanceFactory = resolver.Resolve<DIInstanceFactory>();
             _bindingValidator = resolver.Resolve<InstantiationInfoValidator>();
             _gameObjectInjector = resolver.Resolve<GameObjectInjector>();
+        }
+
+        void DIContext.Clear()
+        {
+            _containers.Clear();
         }
 
         void DIContext.Reset()
@@ -44,7 +50,16 @@ namespace Calluna.DI
             _cleanables.Clean();
             _disposables.Dispose();
             _objects.Destroy();
-            _container.Reset();
+            _gameObjects.Destroy();
+            _containers.Clear();
+        }
+
+        void DIContext.TransferInstancesOf(DIContainers containers)
+        {
+            _cleanables.Add(containers.CleanablesContainer.Values);
+            _disposables.Add(containers.DisposablesContainer.Values);
+            _objects.Add(containers.ObjectsContainer.Values);
+            _gameObjects.Add(containers.GameObjectsContainer.Values);
         }
 
         public void ValidateBindings()
@@ -91,7 +106,7 @@ namespace Calluna.DI
         {
             TContract instance = _instanceFactory.Create<TContract>(Resolver, instantiationInfo);
             TryInjection(instance, instantiationInfo);
-            TryInitialize(instance);
+            TryInitialize(instance, instantiationInfo);
             StoreInstance(instance, instantiationInfo);
             return instance;
         }
@@ -152,8 +167,10 @@ namespace Calluna.DI
                 InjectIntoInstance(instance, instantiationInfo);
         }
 
-        private void TryInitialize<TContract>(TContract instance)
+        private void TryInitialize<TContract>(TContract instance, InstantiationInfo instantiationInfo)
         {
+            if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
+                return;
             if (instance is not Initializable initializable || instance is Component)
                 return;
             
@@ -203,6 +220,6 @@ namespace Calluna.DI
             return result;
         }
 
-        protected abstract Resolver CreateResolver(BindingsContainer container, DIContext diContext);
+        protected abstract Resolver CreateResolver(BindingsContainer container);
     }
 }

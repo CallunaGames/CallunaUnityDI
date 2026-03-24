@@ -5,12 +5,10 @@ namespace Calluna.DI
 {
     public class AppContextInstaller : Installer
     {
-        private DIContext _diContext;
         private GameObject _contextObject;
 
-        public AppContextInstaller(DIContext dIContext, GameObject contextObject)
+        public AppContextInstaller(GameObject contextObject)
         {
-            _diContext = dIContext;
             _contextObject = contextObject;
         }
 
@@ -21,9 +19,6 @@ namespace Calluna.DI
             binder.BindToNewSelf<GameObjectContextsReseter>();
             
             binder.BindToNewSelf<SceneInjector>();
-            
-            binder.BindInstance(_diContext)
-                .WithoutInjection();
             
             binder.BindToNewSelf<DIInstanceFactory>();
             
