@@ -15,10 +15,7 @@ namespace Calluna.DI
 			return Resolve<TContract>(key);
 		}
 
-		public TContract Resolve<TContract>(BindingKey bindingKey)
-		{
-			return DoResolve<TContract>(bindingKey);
-		}
+		public TContract Resolve<TContract>(BindingKey bindingKey) => DoResolve<TContract>(bindingKey);
 
 		public TContract ResolveOptional<TContract>()
 		{
@@ -40,7 +37,7 @@ namespace Calluna.DI
 
 		protected abstract TContract DoResolve<TContract>(BindingKey key);
 
-		protected BindingKey CreateKey<TContract>(IComparable iD)
+		protected static BindingKey CreateKey<TContract>(IComparable iD)
 		{
 			return new BindingKey(typeof(TContract), iD);
 		}

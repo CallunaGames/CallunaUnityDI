@@ -18,7 +18,7 @@ namespace Calluna.DI
             return result;
         }
 
-		public Resolver CreateBasicDIContextResolver()
+		private Resolver CreateBasicDIContextResolver()
 		{
             BasicInstanceResolver result = new BasicInstanceResolver();
             InstantiationInfoValidator validator = new InstantiationInfoValidator();

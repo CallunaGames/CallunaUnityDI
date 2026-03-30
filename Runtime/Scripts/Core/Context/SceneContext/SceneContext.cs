@@ -76,9 +76,9 @@ namespace Calluna.DI
             _sceneCleaner.PerformActionOnObjectsOf(_scene);
         }
 
-        protected override ContextAlreadyInitializedException CreateContextAlreadyInitializedException()
+        protected override ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException()
         {
-            return new SceneContextAlreadyInitializedException(name);
+            return new SceneContextAlreadyIsInitializedException(name);
         }
 
         protected override void DoReset()

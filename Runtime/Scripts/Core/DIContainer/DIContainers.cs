@@ -6,25 +6,25 @@ namespace Calluna.DI
     {
         public BindingsContainer Bindings { get; }
         public SingleInstancesContainer SingleInstances { get; }
-        public NonLazyContainer NonLazyInstanceInfos { get; }
-        public DisposablesContainer DisposablesContainer { get; }
-        public ObjectsContainer ObjectsContainer { get; }
+        public NonLazyContainer NonLazyBindings { get; }
+        public DisposablesContainer Disposables { get; }
+        public ObjectsContainer Objects { get; }
 		internal GameObjectsContainer GameObjectsContainer { get; }
 		internal CleanablesContainer CleanablesContainer { get; }
 
 		public DIContainers(BindingsContainer bindings,
             SingleInstancesContainer singleInstances,
             NonLazyContainer nonLazyBindings,
-            DisposablesContainer disposablesContainer,
-            ObjectsContainer objectsContainer,
+            DisposablesContainer disposables,
+            ObjectsContainer objects,
             GameObjectsContainer gameObjectsContainer,
             CleanablesContainer cleanablesContainer)
 		{
             Bindings = bindings;
             SingleInstances = singleInstances;
-            NonLazyInstanceInfos = nonLazyBindings;
-            DisposablesContainer = disposablesContainer;
-            ObjectsContainer = objectsContainer;
+            NonLazyBindings = nonLazyBindings;
+            Disposables = disposables;
+            Objects = objects;
             GameObjectsContainer = gameObjectsContainer;
             CleanablesContainer = cleanablesContainer;
 		}
@@ -36,7 +36,7 @@ namespace Calluna.DI
 
 		public void AddToNonLazy(Binding binding)
 		{
-            NonLazyInstanceInfos.Add(binding);
+            NonLazyBindings.Add(binding);
 		}
 
 		public void RemoveBinding(BindingKey key)
@@ -48,9 +48,9 @@ namespace Calluna.DI
 		{
             Bindings.Clear();
             SingleInstances.Clear();
-            NonLazyInstanceInfos.Clear();
-            DisposablesContainer.Clear();
-			ObjectsContainer.Clear();
+            NonLazyBindings.Clear();
+            Disposables.Clear();
+			Objects.Clear();
             GameObjectsContainer.Clear();
             CleanablesContainer.Clear();
 		}

@@ -12,7 +12,7 @@ namespace Calluna.DI
         private ScriptableObjectInstaller[] _scriptableObjectInstallers = new ScriptableObjectInstaller[0];
 
         protected abstract DIContext DIContext { get; }
-        public bool Initialized { get; private set; } = false;
+        public bool IsInitialized { get; private set; } = false;
 
         protected Resolver _resolver => DIContext.Resolver;
         protected Binder _binder => DIContext.Binder;
@@ -21,7 +21,7 @@ namespace Calluna.DI
         public virtual void Init(Resolver baseResolver)
         {
             ValidateInitCall();
-            Initialized = true;
+            IsInitialized = true;
             DoInit(baseResolver);
             InstallBindings();
             DIContext.ValidateBindings();
@@ -62,7 +62,7 @@ namespace Calluna.DI
         {
             CleanObjects();
             DIContext.Reset();
-            Initialized = false;
+            IsInitialized = false;
         }
 
         private void InstallBindings()
@@ -82,16 +82,16 @@ namespace Calluna.DI
 
         private void TryReset()
         {
-            if (Initialized)
+            if (IsInitialized)
                 DoReset();
         }
 
         private void ValidateInitCall()
         {
-            if (Initialized)
-                throw CreateContextAlreadyInitializedException();
+            if (IsInitialized)
+                throw CreateContextAlreadyIsInitializedException();
         }
 
-        protected abstract ContextAlreadyInitializedException CreateContextAlreadyInitializedException();
+        protected abstract ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException();
     }
 }

@@ -2,11 +2,11 @@ namespace Calluna.DI
 {
     public class DIContainersFactory : Factory<DIContainers>, Injectable
     {
-        private GameObjectContextsReseter _deactivator;
+        private GameObjectContextsReseter _contextsReseter;
 
         public void Inject(Resolver resolver)
         {
-            _deactivator = resolver.Resolve<GameObjectContextsReseter>();
+            _contextsReseter = resolver.Resolve<GameObjectContextsReseter>();
         }
 
         public DIContainers Create()
@@ -17,7 +17,7 @@ namespace Calluna.DI
                 new NonLazyContainer(),
                 new DisposablesContainer(),
                 new ObjectsContainer(),
-                new GameObjectsContainer(_deactivator),
+                new GameObjectsContainer(_contextsReseter),
                 new CleanablesContainer());
         }
 	} 

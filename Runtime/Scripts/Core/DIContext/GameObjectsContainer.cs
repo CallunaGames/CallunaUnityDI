@@ -32,14 +32,11 @@ namespace Calluna.DI
 
         public void Destroy()
         {
-			foreach (GameObject gameObject in _objects)
-				Destroy(gameObject);
-		}
-
-		private void Destroy(GameObject gameObject)
-		{
-            _reseter.Reset(gameObject);
-            UnityEngine.Object.Destroy(gameObject);
-		}
+            foreach (GameObject gameObject in _objects)
+            {
+                _reseter.Reset(gameObject);
+                UnityEngine.Object.Destroy(gameObject);
+            }
+        }
 	}
 }

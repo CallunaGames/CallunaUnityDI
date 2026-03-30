@@ -33,7 +33,7 @@ namespace Calluna.DI
 		public AllowInjectionBindingContext FromNewComponentOn(GameObject gameObject)
 		{
 			_binding.CreationMode = InstanceCreationMode.FromNewComponentOn;
-			_binding.ProvideInstanceFunction = () => AddComponentTo(gameObject);
+			_binding.ProvideInstanceFunction = () => gameObject.AddComponent<TConcrete>();
 			return new AllowInjectionBindingContext(_arguments);
 		}
 
@@ -42,29 +42,22 @@ namespace Calluna.DI
 		{
 			name = string.IsNullOrEmpty(name) ? $"{nameof(TConcrete)}Object" : name;
 			_binding.CreationMode = InstanceCreationMode.FromNewComponentOnNewGameObject;
-			_binding.ProvideInstanceFunction = () => AddComponentToNew(name, parent, worldPositionStays);
+			_binding.ProvideInstanceFunction = () =>
+			{
+				GameObject gameObject = new GameObject(name);
+				gameObject.transform.SetParent(parent, worldPositionStays);
+				return gameObject.AddComponent<TConcrete>();
+			};
 			return new AllowInjectionBindingContext(_arguments);
 		}
 
-		private TConcrete AddComponentTo(GameObject gameObject)
-		{
-			return gameObject.AddComponent<TConcrete>();
-		}
-
-		private TConcrete AddComponentToNew(string name, Transform parent, bool worldPositionStays)
-		{
-			GameObject gameObject = new GameObject(name);
-			gameObject.transform.SetParent(parent, worldPositionStays);
-			return gameObject.AddComponent<TConcrete>();
-		}
-
-		private void ValidateResourcePath(string path)
+		private static void ValidateResourcePath(string path)
 		{
 			if(Resources.Load<GameObject>(path) == null) 
-				throw new MissingComponentException($"There is no ressource of type {typeof(TConcrete)} at path {path}");
+				throw new MissingComponentException($"There is no resource of type {typeof(TConcrete)} at path {path}");
 		}
 
-		private void ValidateHasComponent(GameObject gameObject)
+		private static void ValidateHasComponent(GameObject gameObject)
 		{
 			TConcrete target = gameObject.GetComponent<TConcrete>();
 			if (target == null)

@@ -8,16 +8,16 @@ namespace Calluna.DI
 
         public AllowInjectionBindingContext FromResources(string path)
         {
-            ValidateRessource(path);
+            ValidateResource(path);
             _binding.CreationMode = InstanceCreationMode.FromResources;
             _binding.ProvideInstanceFunction = () => Resources.Load<TConcrete>(path);
             return new AllowInjectionBindingContext(_arguments);
         }
 
-        private void ValidateRessource(string path)
+        private static void ValidateResource(string path)
         {
             if (Resources.Load<TConcrete>(path) == null)
-                throw new MissingComponentException($"There is no ressource of type {typeof(TConcrete)} at path {path}");
+                throw new MissingComponentException($"There is no resource of type {typeof(TConcrete)} at path {path}");
         }
     }
 }

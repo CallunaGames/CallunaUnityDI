@@ -14,20 +14,10 @@ namespace Calluna.DI
         }
 
         public void AsNonResolvable()
-		{
-            RemoveBindings();
-            AddToNonLazy();
-        }
-
-        private void RemoveBindings()
-		{
+        {
             foreach (BindingKey key in _arguments.Keys)
                 _arguments.BindingStorage.RemoveBinding(key);
             _arguments.Keys.Clear();
-        }
-
-        private void AddToNonLazy()
-        {
             _arguments.BindingStorage.AddToNonLazy(_arguments.Binding);
         }
     }

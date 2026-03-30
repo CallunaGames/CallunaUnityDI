@@ -45,9 +45,9 @@ namespace Calluna.DI
 
 		public TComponent Take<TComponent>(int key) where TComponent : Component
 		{
-			if (!HasObjects(key))
+			if (!_cache.TryGetValue(key, out Stack<GameObject> stack) || stack.Count == 0)
 				throw new EmptyCacheException();
-			GameObject obj = _cache[key].Pop();
+			GameObject obj = stack.Pop();
 			TComponent component = obj.GetComponent<TComponent>();
 			if (component == null)
 				throw new MissingComponentException();

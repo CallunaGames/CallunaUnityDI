@@ -22,20 +22,20 @@ namespace Calluna.DI.Tests
         }
 
         [UnityTest]
-        public IEnumerator ApplicationIsQuitting_IsTrueOnQuitting()
+        public IEnumerator IsQuitting_IsTrueOnQuitting()
         {
             GivenADefaultSetup();
             yield return 0;
             WhenIsQuitting();
-            ThenApplicationIsQuittingIs(true);
+            ThenIsQuittingIs(true);
         }
 
         [UnityTest]
-        public IEnumerator ApplicationIsQuitting_IsFalseByDefault()
+        public IEnumerator IsQuitting_IsFalseByDefault()
         {
             GivenADefaultSetup();
             yield return 0;
-            ThenApplicationIsQuittingIs(false);
+            ThenIsQuittingIs(false);
         }
 
         [UnityTest]
@@ -64,10 +64,10 @@ namespace Calluna.DI.Tests
             _quitDetector.SetQuitting();
         }
 
-        private void ThenApplicationIsQuittingIs(bool shallQuitting)
+        private void ThenIsQuittingIs(bool shallQuitting)
         {
-            Assert.AreEqual(shallQuitting, _quitDetector.ApplicationIsQuitting,
-                $"{nameof(QuitDetector.ApplicationIsQuitting)} of {nameof(QuitDetector)} should be {shallQuitting}");
+            Assert.AreEqual(shallQuitting, _quitDetector.IsQuitting,
+                $"{nameof(QuitDetector.IsQuitting)} of {nameof(QuitDetector)} should be {shallQuitting}");
         }
 
         private void ThenIsOnQuitIsInvoked()
