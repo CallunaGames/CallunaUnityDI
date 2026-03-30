@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -12,7 +11,6 @@ namespace Calluna.DI
         [SerializeField]
         private ScriptableObjectInstaller[] _scriptableObjectInstallers = new ScriptableObjectInstaller[0];
 
-        private List<Installer> _installers = new List<Installer>();
         protected abstract DIContext DIContext { get; }
         public bool Initialized { get; private set; } = false;
 
@@ -47,10 +45,7 @@ namespace Calluna.DI
             TryReset();
         }
 
-        public Resolver GetResolver()
-        {
-            return _resolver;
-        }
+        public Resolver GetResolver() => _resolver;
 
         protected abstract void DoInit(Resolver resolver);
         protected abstract void DoInjection();
@@ -72,16 +67,11 @@ namespace Calluna.DI
 
         private void InstallBindings()
         {
-            foreach (Installer installer in GetAllInstallers())
-                InstallBindings(installer, DIContext.Resolver);
-        }
-
-        private List<Installer> GetAllInstallers()
-        {
-            List<Installer> result = new List<Installer>(_monoInstallers);
-            result.AddRange(_installers);
-            result.AddRange(_scriptableObjectInstallers);
-            return result;
+            Resolver resolver = DIContext.Resolver;
+            foreach (MonoInstaller installer in _monoInstallers)
+                InstallBindings(installer, resolver);
+            foreach (ScriptableObjectInstaller installer in _scriptableObjectInstallers)
+                InstallBindings(installer, resolver);
         }
 
         private void InstallBindings(Installer installer, Resolver resolver)

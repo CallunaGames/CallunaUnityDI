@@ -7,8 +7,7 @@ namespace Calluna.DI
         public AppContext FindOrCreateAppContext()
         {
             AppContext appContext = Object.FindFirstObjectByType<AppContext>();
-            if (appContext == null)
-                appContext = CreateAppContext();
+            appContext ??= CreateAppContext();
             return appContext;
         }
 

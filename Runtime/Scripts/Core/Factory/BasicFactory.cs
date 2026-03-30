@@ -30,7 +30,7 @@ namespace Calluna.DI
 	{
 		public TResult Create(TArg arg)
 		{
-			ArgumentsResolver resolver = new ArgumentsResolver(BaseResolver);
+			ArgumentsResolver resolver = new ArgumentsResolver(BaseResolver, 1);
 			resolver.AddArgument(arg);
 			return CreateInstance(resolver);
 		}

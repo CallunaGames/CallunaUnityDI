@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -21,12 +20,8 @@ namespace Calluna.DI
 
         private void InjectIntoChildren(Transform root, Resolver resolver)
         {
-            IEnumerator iterator = root.GetEnumerator();
-            iterator.Reset();
-            while (iterator.MoveNext())
-            {
-                InjectIntoContextHierarchy(iterator.Current as Transform, resolver);
-            }
+            foreach (Transform child in root)
+                InjectIntoContextHierarchy(child, resolver);
         }
 
         private void InjectInto(Transform root, Resolver resolver)

@@ -16,9 +16,7 @@ namespace Calluna.DI
         public void Add(IEnumerable<IDisposable> disposables)
         {
             foreach (IDisposable disposable in disposables)
-            {
                 _disposibles.Add(disposable);
-            }
         }
 
         public void Clear()

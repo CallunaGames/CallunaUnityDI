@@ -27,9 +27,9 @@ namespace Calluna.DI
 
 		protected override TContract DoResolve<TContract>(BindingKey key)
 		{
-			return _arguments.ContainsKey(key) ?
-				(TContract)_arguments[key] :
-				_baseResolver.Resolve<TContract>(key);
+			return _arguments.TryGetValue(key, out object value)
+				? (TContract)value
+				: _baseResolver.Resolve<TContract>(key);
 		}
 
 		public override bool IsResolvable(BindingKey key)

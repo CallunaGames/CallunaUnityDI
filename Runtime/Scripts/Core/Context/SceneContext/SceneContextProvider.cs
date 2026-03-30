@@ -52,8 +52,7 @@ namespace Calluna.DI
             string parentContextID = context.ParentContextID;
             if (string.IsNullOrEmpty(parentContextID))
                 return;
-            if (!_sceneToDependencyAmount.ContainsKey(parentContextID))
-                _sceneToDependencyAmount.Add(parentContextID, 0);
+            _sceneToDependencyAmount.TryAdd(parentContextID, 0);
             _sceneToDependencyAmount[parentContextID]++;
         }
 

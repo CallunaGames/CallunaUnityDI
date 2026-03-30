@@ -115,17 +115,11 @@ namespace Calluna.DI
         {
             if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
                 return;
-            TryAddDisposable(instance as IDisposable);
+            if (instance is IDisposable disposable)
+                _disposables.Add(disposable);
             TryAddCleanable(instance);
             if (instance is Component component && !TryAddGameObject(component.gameObject, instantiationInfo))
                 _objects.Add(component);
-        }
-
-        private void TryAddDisposable(IDisposable disposable)
-        {
-            if (disposable == null)
-                return;
-            _disposables.Add(disposable);
         }
 
         private bool TryAddGameObject(GameObject gameObject, InstantiationInfo instantiationInfo)
@@ -160,9 +154,9 @@ namespace Calluna.DI
             if (!instantiationInfo.InjectionAllowed)
                 return;
             if (instance is Component component)
-                InjectIntoComponent(component, instantiationInfo);
+                InjectIntoTransform(component.transform, instantiationInfo);
             else if (instance is GameObject gameObject)
-                InjectIntoGameObject(gameObject, instantiationInfo);
+                InjectIntoTransform(gameObject.transform, instantiationInfo);
             else
                 InjectIntoInstance(instance, instantiationInfo);
         }
@@ -191,16 +185,6 @@ namespace Calluna.DI
             _cleanables.Add(cleanable);
         }
 
-        private void InjectIntoGameObject(GameObject gameObject, InstantiationInfo instantiationInfo)
-        {
-            InjectIntoTransform(gameObject.transform, instantiationInfo);
-        }
-
-        private void InjectIntoComponent(Component component, InstantiationInfo instantiationInfo)
-        {
-            InjectIntoTransform(component.transform, instantiationInfo);
-        }
-
         private void InjectIntoTransform(Transform transform, InstantiationInfo instantiationInfo)
         {
             _gameObjectInjector.InjectIntoContextHierarchy(transform, GetResolverFor(instantiationInfo));
@@ -215,7 +199,9 @@ namespace Calluna.DI
 
         private Resolver GetResolverFor(InstantiationInfo instantiationInfo)
         {
-            ArgumentsResolver result = new ArgumentsResolver(Resolver);
+            if (instantiationInfo.Arguments.Count == 0)
+                return Resolver;
+            ArgumentsResolver result = new ArgumentsResolver(Resolver, instantiationInfo.Arguments.Count);
             result.AddArguments(instantiationInfo.Arguments);
             return result;
         }

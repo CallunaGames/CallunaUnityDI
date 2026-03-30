@@ -21,10 +21,8 @@ namespace Calluna.DI
 
         public void Add(IEnumerable<GameObject> gameObjects)
         {
-	        foreach (GameObject obj in gameObjects)
-	        {
-		        _objects.Add(obj);
-	        }
+            foreach (GameObject obj in gameObjects)
+                _objects.Add(obj);
         }
 
         public void Clear()
