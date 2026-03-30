@@ -60,7 +60,7 @@ namespace Calluna.DI
                 hashCode = (hashCode * 397) ^ (int)AmountMode;
                 hashCode = (hashCode * 397) ^ (ProvideInstanceFunction != null ? ProvideInstanceFunction.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ InjectionAllowed.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Arguments.GetHashCode();
                 return hashCode;
             }
         }

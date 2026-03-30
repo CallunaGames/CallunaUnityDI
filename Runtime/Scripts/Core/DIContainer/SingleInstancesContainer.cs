@@ -8,15 +8,15 @@ namespace Calluna.DI
         private readonly Dictionary<Binding, object> _singleInstances = 
             new Dictionary<Binding, object>(new BindingComparer());
 
-        public bool Has(Binding binding)
+        public bool TryGet<TContract>(Binding binding, out TContract instance)
         {
-            return _singleInstances.ContainsKey(binding);
-        }
-
-        public TContract Get<TContract>(Binding binding)
-        {
-            ValidateHasSingleInstance(binding);
-            return (TContract)_singleInstances[binding];
+            if (_singleInstances.TryGetValue(binding, out object value))
+            {
+                instance = (TContract)value;
+                return true;
+            }
+            instance = default;
+            return false;
         }
 
         public void Store<TContract>(Binding key, TContract instance)
@@ -25,15 +25,9 @@ namespace Calluna.DI
             _singleInstances.Add(key, instance);
         }
 
-        private void ValidateHasSingleInstance(Binding key)
-        {
-            if (!Has(key))
-                throw new MissingSingleInstanceException();
-        }
-
         private void ValidateHasNoSingleInstance(Binding key)
         {
-            if (Has(key))
+            if (_singleInstances.ContainsKey(key))
                 throw new MissingSingleInstanceException();
         }
 

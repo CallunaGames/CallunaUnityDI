@@ -44,7 +44,7 @@ namespace Calluna.DI
             return Bind<TContract>(iD).ToObject<TContract>();
         }
 
-        private Binding CreateBinding<TContract>()
+        private static Binding CreateBinding<TContract>()
         {
             Type contractType = typeof(TContract);
             return new Binding(contractType);

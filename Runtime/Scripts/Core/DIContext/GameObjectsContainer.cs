@@ -21,10 +21,8 @@ namespace Calluna.DI
 
         public void Add(IEnumerable<GameObject> gameObjects)
         {
-	        foreach (GameObject obj in gameObjects)
-	        {
-		        _objects.Add(obj);
-	        }
+            foreach (GameObject obj in gameObjects)
+                _objects.Add(obj);
         }
 
         public void Clear()
@@ -34,14 +32,11 @@ namespace Calluna.DI
 
         public void Destroy()
         {
-			foreach (GameObject gameObject in _objects)
-				Destroy(gameObject);
-		}
-
-		private void Destroy(GameObject gameObject)
-		{
-            _reseter.Reset(gameObject);
-            UnityEngine.Object.Destroy(gameObject);
-		}
+            foreach (GameObject gameObject in _objects)
+            {
+                _reseter.Reset(gameObject);
+                UnityEngine.Object.Destroy(gameObject);
+            }
+        }
 	}
 }

@@ -12,8 +12,15 @@ namespace Calluna.DI.Examples.Pooling
 		public override void InstallBindings(Binder binder)
 		{
 			binder.BindInstance(_foo);
-			binder.Bind<Factory<Bar, Bar.Arguments>>().ToNew<PrefabFactory<Bar, Bar.Arguments>>().WithArgument(_barPrefab);
-			binder.Bind<Pool<Bar, Bar.Arguments>>().ToNew<MonoPool<Bar, Bar.Arguments>>().WithArgument(_barPrefab).AsSingle();
+			binder.Bind<Factory<Bar, Bar.Arguments>>()
+				.And<Factory<Bar, Bar.Arguments, PrefabInstantiationArguments>>()
+				.ToNew<PrefabFactory<Bar, Bar.Arguments>>()
+				.WithArgument(_barPrefab);
+			binder.Bind<Pool<Bar, Bar.Arguments>>()
+				.And<Pool<Bar, Bar.Arguments, PrefabInstantiationArguments>>()
+				.ToNew<MonoPool<Bar, Bar.Arguments>>()
+				.WithArgument(_barPrefab)
+				.AsSingle();
 		}
 	}
 }

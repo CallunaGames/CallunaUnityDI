@@ -15,9 +15,7 @@ namespace Calluna.DI
         public void Add(IEnumerable<UnityEngine.Object> objects)
         {
             foreach (UnityEngine.Object obj in objects)
-            {
                 _objects.Add(obj);
-            }
         }
 
         public void Clear()

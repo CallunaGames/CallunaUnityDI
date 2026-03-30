@@ -16,7 +16,7 @@ namespace Calluna.DI
 
         private QuitDetector _quitDetector;
 
-        private bool IsAppQuitting => _quitDetector.ApplicationIsQuitting;
+        private bool IsAppQuitting => _quitDetector.IsQuitting;
 
         public void Inject(Resolver resolver)
         {
@@ -52,8 +52,7 @@ namespace Calluna.DI
             string parentContextID = context.ParentContextID;
             if (string.IsNullOrEmpty(parentContextID))
                 return;
-            if (!_sceneToDependencyAmount.ContainsKey(parentContextID))
-                _sceneToDependencyAmount.Add(parentContextID, 0);
+            _sceneToDependencyAmount.TryAdd(parentContextID, 0);
             _sceneToDependencyAmount[parentContextID]++;
         }
 
@@ -74,7 +73,7 @@ namespace Calluna.DI
         private void ValidateRemove(string iD)
         {
             if (!_sceneContexts.ContainsKey(iD))
-                throw new AlreadyAddedException(iD);
+                throw new NotAddedException(iD);
             if (!IsAppQuitting && IsDependantSceneContext(iD))
                 throw new ActiveSceneDependenciesException(iD);
         }

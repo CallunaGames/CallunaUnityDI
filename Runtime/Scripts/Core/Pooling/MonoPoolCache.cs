@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -24,9 +23,7 @@ namespace Calluna.DI
 
 		public bool HasObjects(int key)
 		{
-			if (!_cache.ContainsKey(key))
-				return false;
-			return _cache[key].Count > 0;
+			return _cache.TryGetValue(key, out Stack<GameObject> stack) && stack.Count > 0;
 		}
 
 		public void Store<TComponent>(int key, TComponent component) where TComponent : Component
@@ -48,9 +45,9 @@ namespace Calluna.DI
 
 		public TComponent Take<TComponent>(int key) where TComponent : Component
 		{
-			if (!HasObjects(key))
+			if (!_cache.TryGetValue(key, out Stack<GameObject> stack) || stack.Count == 0)
 				throw new EmptyCacheException();
-			GameObject obj = _cache[key].Pop();
+			GameObject obj = stack.Pop();
 			TComponent component = obj.GetComponent<TComponent>();
 			if (component == null)
 				throw new MissingComponentException();
@@ -59,9 +56,9 @@ namespace Calluna.DI
 
 		private void Clear()
 		{
-			IEnumerable<GameObject> objects = _cache.SelectMany(o => o.Value);
-			foreach (GameObject obj in objects)
-				Destroy(obj);
+			foreach (KeyValuePair<int, Stack<GameObject>> entry in _cache)
+				foreach (GameObject obj in entry.Value)
+					Destroy(obj);
 			_cache.Clear();
 		}
 

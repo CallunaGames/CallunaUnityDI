@@ -10,26 +10,26 @@ namespace Calluna.DI
         private InstantiationInfoValidator _bindingValidator;
         private GameObjectInjector _gameObjectInjector;
 
-        private Resolver _dIContainerResolver;
-        private Binder _dIContainerBinder;
+        private Resolver _diContainerResolver;
+        private Binder _diContainerBinder;
 
-        public Resolver Resolver => _dIContainerResolver;
-        public Binder Binder => _dIContainerBinder;
+        public Resolver Resolver => _diContainerResolver;
+        public Binder Binder => _diContainerBinder;
 
         private BindingsContainer _bindings => _containers.Bindings;
-        private NonLazyContainer _nonLazyBindings => _containers.NonLazyInstanceInfos;
+        private NonLazyContainer _nonLazyBindings => _containers.NonLazyBindings;
         private SingleInstancesContainer _singleInstances => _containers.SingleInstances;
-        private DisposablesContainer _disposables => _containers.DisposablesContainer;
-        private ObjectsContainer _objects => _containers.ObjectsContainer;
+        private DisposablesContainer _disposables => _containers.Disposables;
+        private ObjectsContainer _objects => _containers.Objects;
         private GameObjectsContainer _gameObjects => _containers.GameObjectsContainer;
         private CleanablesContainer _cleanables => _containers.CleanablesContainer;
 
         void Injectable.Inject(Resolver resolver)
         {
             DoInjection(resolver);
-            _dIContainerResolver = CreateResolver(_bindings);
-            _dIContainerBinder = new DIContainerBinder(_containers);
-            _dIContainerBinder.Bind<DIContext>().ToInstance(this);
+            _diContainerResolver = CreateResolver(_bindings);
+            _diContainerBinder = new DIContainerBinder(_containers);
+            _diContainerBinder.Bind<DIContext>().ToInstance(this);
         }
 
         protected virtual void DoInjection(Resolver resolver)
@@ -57,8 +57,8 @@ namespace Calluna.DI
         void DIContext.TransferInstancesOf(DIContainers containers)
         {
             _cleanables.Add(containers.CleanablesContainer.Values);
-            _disposables.Add(containers.DisposablesContainer.Values);
-            _objects.Add(containers.ObjectsContainer.Values);
+            _disposables.Add(containers.Disposables.Values);
+            _objects.Add(containers.Objects.Values);
             _gameObjects.Add(containers.GameObjectsContainer.Values);
         }
 
@@ -90,8 +90,8 @@ namespace Calluna.DI
 
         private TContract ResolveSingleInstance<TContract>(Binding binding)
         {
-            return _singleInstances.Has(binding)
-                ? _singleInstances.Get<TContract>(binding)
+            return _singleInstances.TryGet<TContract>(binding, out TContract cached)
+                ? cached
                 : CreateSingleInstance<TContract>(binding);
         }
 
@@ -115,17 +115,11 @@ namespace Calluna.DI
         {
             if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
                 return;
-            TryAddDisposable(instance as IDisposable);
+            if (instance is IDisposable disposable)
+                _disposables.Add(disposable);
             TryAddCleanable(instance);
             if (instance is Component component && !TryAddGameObject(component.gameObject, instantiationInfo))
                 _objects.Add(component);
-        }
-
-        private void TryAddDisposable(IDisposable disposable)
-        {
-            if (disposable == null)
-                return;
-            _disposables.Add(disposable);
         }
 
         private bool TryAddGameObject(GameObject gameObject, InstantiationInfo instantiationInfo)
@@ -152,7 +146,6 @@ namespace Calluna.DI
                 GetInstance<UnityEngine.Object>(binding);
             else
                 GetInstance<object>(binding);
-            _nonLazyBindings.TryAddToCreated(binding);
         }
 
         private void TryInjection<TContract>(TContract instance, InstantiationInfo instantiationInfo)
@@ -160,9 +153,9 @@ namespace Calluna.DI
             if (!instantiationInfo.InjectionAllowed)
                 return;
             if (instance is Component component)
-                InjectIntoComponent(component, instantiationInfo);
+                InjectIntoTransform(component.transform, instantiationInfo);
             else if (instance is GameObject gameObject)
-                InjectIntoGameObject(gameObject, instantiationInfo);
+                InjectIntoTransform(gameObject.transform, instantiationInfo);
             else
                 InjectIntoInstance(instance, instantiationInfo);
         }
@@ -191,16 +184,6 @@ namespace Calluna.DI
             _cleanables.Add(cleanable);
         }
 
-        private void InjectIntoGameObject(GameObject gameObject, InstantiationInfo instantiationInfo)
-        {
-            InjectIntoTransform(gameObject.transform, instantiationInfo);
-        }
-
-        private void InjectIntoComponent(Component component, InstantiationInfo instantiationInfo)
-        {
-            InjectIntoTransform(component.transform, instantiationInfo);
-        }
-
         private void InjectIntoTransform(Transform transform, InstantiationInfo instantiationInfo)
         {
             _gameObjectInjector.InjectIntoContextHierarchy(transform, GetResolverFor(instantiationInfo));
@@ -210,12 +193,21 @@ namespace Calluna.DI
         {
             if (instance is not Injectable injectable)
                 return;
-            injectable.Inject(GetResolverFor(instantiationInfo));
+            try
+            {
+                injectable.Inject(GetResolverFor(instantiationInfo));
+            }
+            catch (MissingBindingException e)
+            {
+                throw new MissingBindingException($"{e.Message} — requested by {instance.GetType().Name}");
+            }
         }
 
         private Resolver GetResolverFor(InstantiationInfo instantiationInfo)
         {
-            ArgumentsResolver result = new ArgumentsResolver(Resolver);
+            if (instantiationInfo.Arguments.Count == 0)
+                return Resolver;
+            ArgumentsResolver result = new ArgumentsResolver(Resolver, instantiationInfo.Arguments.Count);
             result.AddArguments(instantiationInfo.Arguments);
             return result;
         }

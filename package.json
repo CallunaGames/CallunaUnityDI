@@ -1,16 +1,14 @@
 {
   "name": "com.calluna.di",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "displayName": "Calluna Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.0.5...v1.0.6",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.0.6...v1.1.0",
   "licensesUrl": "",
-  "dependencies": {
-    "nuget.moq": "1.0.0"
-  },
+  "dependencies": {},
   "samples": [
     {
       "displayName": "Circular Dependency Injection",
@@ -45,7 +43,11 @@
   ],
   "keywords": [
     "dependency injection",
-    "dependency inversion"
+    "dependency inversion",
+    "ioc",
+    "factory",
+    "pooling",
+    "scoped"
   ],
   "author": {
     "name": "Calluna Games",

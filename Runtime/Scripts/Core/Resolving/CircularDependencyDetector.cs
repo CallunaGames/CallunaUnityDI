@@ -4,7 +4,8 @@ namespace Calluna.DI
 {
 	public class CircularDependencyDetector : ResolverBase
 	{
-		private HashSet<BindingKey> resolveStack = new HashSet<BindingKey>(new BindingKeyComparer());
+		// Tracks keys currently being resolved; re-entry on the same key signals a cycle.
+	private HashSet<BindingKey> _resolveStack = new HashSet<BindingKey>(new BindingKeyComparer());
 		private Resolver _baseResolver;
 
 		public CircularDependencyDetector(Resolver baseResolver)
@@ -20,17 +21,17 @@ namespace Calluna.DI
 		protected override TContract DoResolve<TContract>(BindingKey key)
 		{
 			ValidateIsNoCircularDependency(key);
-			resolveStack.Add(key);
+			_resolveStack.Add(key);
 			TContract result = _baseResolver.Resolve<TContract>(key);
-			resolveStack.Remove(key);
+			_resolveStack.Remove(key);
 			return result;
 		}
 
 		private void ValidateIsNoCircularDependency(BindingKey key)
 		{
-			if (resolveStack.Contains(key))
+			if (_resolveStack.Contains(key))
 			{
-				resolveStack.Clear();
+				_resolveStack.Clear();
 				throw new CircularDependencyException(key);
 			}
 		}

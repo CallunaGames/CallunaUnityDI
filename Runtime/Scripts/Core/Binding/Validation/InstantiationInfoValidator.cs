@@ -13,14 +13,9 @@ namespace Calluna.DI
 
 		public void Validate(InstantiationInfo info)
 		{
-            ValidateIsNotNull(info);
+            if (info == null)
+                throw new ArgumentNullException();
             _fromValidator.Validate(info);
         }
-
-		private void ValidateIsNotNull(InstantiationInfo info)
-		{
-			if (info == null)
-				throw new ArgumentNullException();
-		}
 	}
 }

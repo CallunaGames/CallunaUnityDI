@@ -22,8 +22,9 @@ namespace Calluna.DI
 
         public Binding GetBinding(BindingKey key)
         {
-            ValidateBindingExists(key);
-            return _bindings[key];
+            if (!_bindings.TryGetValue(key, out Binding binding))
+                throw new MissingBindingException($"There is no Binding for Contract {key}");
+            return binding;
         }
 
         public IEnumerable<InstantiationInfo> GetInstantiationInfos()
@@ -47,7 +48,7 @@ namespace Calluna.DI
             return _bindings.ContainsKey(key);
         }
 
-        private BindingKey CreateKey<TContract>(IComparable iD)
+        private static BindingKey CreateKey<TContract>(IComparable iD)
         {
             Type contract = typeof(TContract);
             return new BindingKey(contract, iD);

@@ -38,9 +38,9 @@ namespace Calluna.DI
             return string.IsNullOrEmpty(parentID) ? _resolver : _sceneContextProvider.Get(parentID).GetResolver();
         }
 
-		protected override ContextAlreadyInitializedException CreateContextAlreadyInitializedException()
+		protected override ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException()
 		{
-            return new AppContextAlreadyInitializedException(name);
+            return new AppContextAlreadyIsInitializedException(name);
         }
 	}
 }

@@ -34,9 +34,9 @@ namespace Calluna.DI
             _injector.InjectIntoHierarchy(transform, DIContext.Resolver);
         }
 
-        protected override ContextAlreadyInitializedException CreateContextAlreadyInitializedException()
+        protected override ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException()
         {
-            return new GameObjectContextAlreadyInitializedException(name);
+            return new GameObjectContextAlreadyIsInitializedException(name);
         }
     }
 }

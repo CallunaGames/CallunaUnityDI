@@ -9,7 +9,7 @@
             _childContext = CreateDIContext(resolver);
         }
 
-        private ChildDIContext CreateDIContext(Resolver resolver)
+        private static ChildDIContext CreateDIContext(Resolver resolver)
         {
             Factory<ChildDIContext, Resolver> contextFactory = resolver.Resolve<Factory<ChildDIContext, Resolver>>();
             return contextFactory.Create(resolver);
