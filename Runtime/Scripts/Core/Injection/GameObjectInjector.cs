@@ -35,7 +35,14 @@ namespace Calluna.DI
         {
             if (injectable is Installer)
                 return;
-            injectable.Inject(resolver);
+            try
+            {
+                injectable.Inject(resolver);
+            }
+            catch (MissingBindingException e)
+            {
+                throw new MissingBindingException($"{e.Message} — requested by {injectable.GetType().Name}");
+            }
         }
     }
 }

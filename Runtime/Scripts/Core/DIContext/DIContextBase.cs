@@ -193,7 +193,14 @@ namespace Calluna.DI
         {
             if (instance is not Injectable injectable)
                 return;
-            injectable.Inject(GetResolverFor(instantiationInfo));
+            try
+            {
+                injectable.Inject(GetResolverFor(instantiationInfo));
+            }
+            catch (MissingBindingException e)
+            {
+                throw new MissingBindingException($"{e.Message} — requested by {instance.GetType().Name}");
+            }
         }
 
         private Resolver GetResolverFor(InstantiationInfo instantiationInfo)
