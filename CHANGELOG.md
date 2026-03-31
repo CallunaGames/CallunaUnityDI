@@ -1,3 +1,20 @@
+## [1.2.0] - 2026-03-31
+
+### Breaking Changes
+- `CircularDependencyDetector` public class removed. Any code that instantiates, subclasses, or references this type directly will fail to compile. Circular dependency detection is now handled automatically by `DIContextBase`.
+- `CircularDependencyException(BindingKey)` constructor removed; replaced by `CircularDependencyException(IReadOnlyList<Type> chain)`. Any code constructing this exception directly must be updated to pass the full type chain instead.
+
+### Improvements
+- Circular dependency detection no longer wraps every resolution call in a decorator. Detection now fires only during instance construction, eliminating one virtual-dispatch layer on every `Resolve` call and skipping cached singleton lookups entirely.
+- `CircularDependencyException` message now includes the full cycle chain (e.g. `ServiceA → ServiceB → ServiceA`) instead of just the re-entered type, making cycles significantly easier to diagnose.
+- Resolution chain is always cleaned up via `try/finally`, preventing false-positive cycle detection after any non-circular exception during injection.
+
+### Bug Fixes
+- Restored `nuget.moq` as a package dependency (accidentally dropped in v1.1.0; required by the test assembly).
+
+### Tests
+- Added `CircularDependencyTests` covering self-cycles, two- and three-hop cycles, exception message content and ordering, and chain cleanup after an exception.
+
 ## [1.1.0] - 2026-03-31
 
 ### Breaking Changes

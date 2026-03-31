@@ -95,20 +95,23 @@ Use the `Binder` inside an installer's `InstallBindings` method to declare how t
 
 ```
 Bind<TContract>()
-  [.And<TContract2>() ...]      // bind additional contract types to the same concrete
-  .To<TConcrete>()              // or: .ToNew<T>() / .ToComponent<T>() / .ToObject<T>() / .ToInstance(x)
-  .FromNew()                    // creation mode (see table below)
-  [.WithArgument<TArg>(value)]  // pass arguments to be resolved as dependencies
+  [.And<TContract2>() ...]            // bind additional contract types to the same concrete
+  .ToNew<TConcrete>()                 // new() creation mode — TConcrete must have a parameterless constructor
+  // or: .To<TConcrete>()             // opens FromInstance / FromMethod / FromFactory
+  // or: .ToComponent<TConcrete>()    // opens component-specific creation modes
+  // or: .ToObject<TConcrete>()       // opens FromResources
+  // or: .ToInstance(existingObject)  // binds a pre-existing instance directly
+  [.WithArgument<TArg>(value)]        // pass arguments to be resolved as dependencies
   [.WithInjection() | .WithoutInjection()]
-  .AsSingle()                   // or: .PerRequest()
-  [.NonLazy()]                  // optional: create immediately, do not wait for first resolve
+  .AsSingle()                         // or: .PerRequest()
+  [.NonLazy()]                        // optional: create immediately, do not wait for first resolve
 ```
 
 ### Creation modes
 
 | Method | Description |
 |--------|-------------|
-| `FromNew()` | Calls the parameterless constructor of the concrete type. |
+| `ToNew<TConcrete>()` / `BindToNewSelf<T>()` | Calls the parameterless constructor of the concrete type. |
 | `FromInstance(instance)` | Uses a pre-existing instance. Injection is off by default; call `.WithInjection()` to enable it. |
 | `FromMethod(Func<T>)` | Calls a delegate to create the instance. |
 | `FromFactory()` | Delegates creation to a bound `Factory<T>`. |
@@ -131,6 +134,7 @@ Bind<TContract>()
 public class MyInstaller : MonoInstaller
 {
     [SerializeField] private EnemyView _enemyPrefab;
+    [SerializeField] private Grid _grid;
 
     public override void InstallBindings(Binder binder)
     {
@@ -142,9 +146,8 @@ public class MyInstaller : MonoInstaller
         // Bind an already-created instance (no injection by default)
         binder.BindInstance<IConfig>(_config);
 
-        // Bind a concrete type to itself
-        binder.BindToSelf<AudioManager>()
-            .FromNew()
+        // Bind a concrete type to itself, created with new()
+        binder.BindToNewSelf<AudioManager>()
             .AsSingle();
 
         // Bind two contracts to one concrete type
@@ -156,13 +159,8 @@ public class MyInstaller : MonoInstaller
 
         // Use FromMethod when construction requires parameters
         binder.BindToSelf<Pathfinder>()
-            .FromMethod(CreatePathfinder);
-    }
-
-    private Pathfinder CreatePathfinder()
-    {
-        Grid grid = _resolver.Resolve<Grid>();
-        return new Pathfinder(grid);
+            .FromMethod(() => new Pathfinder(_grid))
+            .AsSingle();
     }
 }
 ```
@@ -571,7 +569,7 @@ The following samples are importable via the Unity Package Manager.
 
 | Sample | Description |
 |--------|-------------|
-| **Circular Dependency Injection** | Shows how the framework detects and reports circular dependencies at runtime. |
+| **Circular Dependency Injection** | Shows how the framework detects circular dependencies at runtime and reports the full cycle chain (e.g. `ServiceA → ServiceB → ServiceA`) in the exception message. |
 | **Component On New Game Object** | Demonstrates `FromNewComponentOnNewGameObject` — binding a MonoBehaviour that is added to a freshly created GameObject. |
 | **Non Resolvable Instances** | Demonstrates `.AsNonResolvable()` — instantiating and injecting objects that are not registered for resolution. |
 | **Pooling** | Full scene using `MonoPoolInstaller` and the `Pool<T>` / `Pool<T,TArg>` interfaces. |
