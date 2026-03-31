@@ -4,8 +4,7 @@ namespace Calluna.DI
 	{
 		protected override Resolver CreateResolver(BindingsContainer container)
 		{
-			Resolver containerResolver = new DIContainerResolver(container, this);
-			return new CircularDependencyDetector(containerResolver);
+			return new DIContainerResolver(container, this);
 		}
 	}
 }

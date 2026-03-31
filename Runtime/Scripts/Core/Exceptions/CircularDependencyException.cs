@@ -1,10 +1,12 @@
 using System;
-using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Calluna.DI
 {
     public class CircularDependencyException : Exception
     {
-        public CircularDependencyException(BindingKey bindingKey) : base($"Circular dependency detected while resolving contract {bindingKey}") { }
+        public CircularDependencyException(IReadOnlyList<Type> chain)
+            : base("Circular dependency detected: " + string.Join(" → ", chain.Select(t => t.Name))) { }
     }
 }

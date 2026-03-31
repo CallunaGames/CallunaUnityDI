@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -9,6 +10,7 @@ namespace Calluna.DI
         private DIInstanceFactory _instanceFactory;
         private InstantiationInfoValidator _bindingValidator;
         private GameObjectInjector _gameObjectInjector;
+        private readonly List<Type> _creationChain = new List<Type>();
 
         private Resolver _diContainerResolver;
         private Binder _diContainerBinder;
@@ -102,13 +104,25 @@ namespace Calluna.DI
             return instance;
         }
 
-        private TContract CreateInstance<TContract>(InstantiationInfo instantiationInfo)
+        private TContract CreateInstance<TContract>(Binding binding)
         {
-            TContract instance = _instanceFactory.Create<TContract>(Resolver, instantiationInfo);
-            TryInjection(instance, instantiationInfo);
-            TryInitialize(instance, instantiationInfo);
-            StoreInstance(instance, instantiationInfo);
-            return instance;
+            Type concreteType = binding.ConcreteType;
+            if (_creationChain.Contains(concreteType))
+                throw new CircularDependencyException(new List<Type>(_creationChain) { concreteType });
+
+            _creationChain.Add(concreteType);
+            try
+            {
+                TContract instance = _instanceFactory.Create<TContract>(Resolver, binding);
+                TryInjection(instance, binding);
+                TryInitialize(instance, binding);
+                StoreInstance(instance, binding);
+                return instance;
+            }
+            finally
+            {
+                _creationChain.RemoveAt(_creationChain.Count - 1);
+            }
         }
 
         private void StoreInstance<TContract>(TContract instance, InstantiationInfo instantiationInfo)
