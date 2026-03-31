@@ -8,7 +8,10 @@
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
   "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.0.6...v1.1.0",
   "licensesUrl": "",
-  "dependencies": {},
+  "dependencies": 
+  {
+    "nuget.moq": "1.0.0"
+  },
   "samples": [
     {
       "displayName": "Circular Dependency Injection",

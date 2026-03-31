@@ -14,9 +14,7 @@ namespace Calluna.DI
 
 		protected override Resolver CreateResolver(BindingsContainer container)
 		{
-			Resolver containerResolver = new DIContainerResolver(container, this);
-			Resolver detector = new CircularDependencyDetector(containerResolver);
-			return new ChildResolver(_resolver, detector);
+			return new ChildResolver(_resolver, new DIContainerResolver(container, this));
 		}
 
 		public void MoveInstancesToParent()
