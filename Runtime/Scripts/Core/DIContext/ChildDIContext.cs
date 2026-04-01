@@ -3,13 +3,13 @@ namespace Calluna.DI
     public class ChildDIContext : DIContextBase
     {
 	    private Resolver _resolver;
-		public DIContext Parent { get; private set; }
+	    private DIContext _parent;
 
 		protected override void DoInjection(Resolver resolver)
 		{
 			base.DoInjection(resolver);
 			_resolver = resolver;
-			Parent = resolver.Resolve<DIContext>();
+			_parent = resolver.Resolve<DIContext>();
 		}
 
 		protected override Resolver CreateResolver(BindingsContainer container)
@@ -19,7 +19,7 @@ namespace Calluna.DI
 
 		public void MoveInstancesToParent()
 		{
-			Parent.TransferInstancesOf(_containers);
+			_parent.TransferInstancesOf(_containers);
 		}
     }
 }

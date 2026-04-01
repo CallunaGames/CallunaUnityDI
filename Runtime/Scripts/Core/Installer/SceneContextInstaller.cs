@@ -5,12 +5,10 @@ namespace Calluna.DI
     public class SceneContextInstaller : Installer
     {
         private GameObject _contextObject;
-        private DIContext _diContext;
 
-        public SceneContextInstaller(GameObject contextObject, DIContext dIContext)
+        public SceneContextInstaller(GameObject contextObject)
         {
             _contextObject = contextObject;
-            _diContext = dIContext;
         }
         
         public void InstallBindings(Binder binder)

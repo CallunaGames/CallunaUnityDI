@@ -14,7 +14,6 @@ namespace Calluna.DI
 		{
 			_injector = resolver.Resolve<GameObjectInjector>();
             _currentContext = CreateDIContext(resolver);
-			InstallGameObjectContextBindings();
 		}
 
 		private ChildDIContext CreateDIContext(Resolver resolver)
@@ -22,12 +21,6 @@ namespace Calluna.DI
 			Factory<ChildDIContext, Resolver> contextFactory = resolver.Resolve<Factory<ChildDIContext, Resolver>>();
 			return contextFactory.Create(resolver);
 		}
-
-		private void InstallGameObjectContextBindings()
-		{
-            GameObjectContextInstaller installer = new GameObjectContextInstaller(_currentContext);
-            installer.InstallBindings(_binder);
-        }
 
 		protected override void DoInjection()
         {

@@ -38,7 +38,7 @@ Each context holds its own `DIContainer` and resolves through a `ChildResolver` 
 
 | Interface | Purpose |
 |-----------|---------|
-| `DIContext` | Root contract: exposes `Resolver` and `Binder`, plus `ValidateBindings()`, `Reset()`, `Clear()` |
+| `DIContext` | Root contract: exposes `Resolver` and `Binder`, plus `ValidateBindings()`, `PostInit()`, `Reset()`, `Clear()` |
 | `Binder` | Fluent entry point: `Bind<T>()`, `BindInstance<T>()`, `BindComponent<T>()`, etc. |
 | `Resolver` | Lookup: `Resolve<T>()`, `ResolveOptional<T>()`, `IsResolvable()` |
 | `Injectable` | Implement to receive injection: `void Inject(Resolver resolver)` |
@@ -65,9 +65,18 @@ binder.Bind<IService>()   // contract type
 1. `Resolver` finds `Binding` for requested type (walks up hierarchy via `ChildResolver`)
 2. `DIInstanceFactory` creates instance using binding metadata
 3. If `Injectable`, calls `Inject(resolver)`
-4. If `Initializable`, calls `Initialize()`
+4. If `Initializable` (plain C# only, or Component after `PostInit`), calls `Initialize()`
 5. Stores in container (`SingleInstancesContainer` or ephemeral)
-6. `CircularDependencyDetector` wraps resolution to catch infinite loops
+
+### `Initializable` and `Cleanable` on MonoBehaviours
+
+`Initializable.Initialize()` exists to solve the Unity `Awake`/`OnEnable` ordering problem: injection happens during `Awake`-equivalent init, but `OnEnable` fires in the same frame before injection is complete. `Initialize()` is guaranteed to run after all injection in the context is done.
+
+**Before `PostInit()`** (during scene/context init): the container skips `Initialize()` on Components. The hierarchy traversers (`GameObjectInitializer`, `SceneObjectsLifeCycleActionCaller<Initializable>`) call it instead, ensuring correct ordering across the full scene graph.
+
+**After `PostInit()`** (mid-runtime lazy resolution): the traversers have already run, so the container calls `Initialize()` directly on resolved Components.
+
+`Cleanable.Clean()` on Components is always handled by `GameObjectCleaner` / `SceneObjectsLifeCycleActionCaller<Cleanable>` during context reset — never by the container directly.
 
 ### DIContainers
 

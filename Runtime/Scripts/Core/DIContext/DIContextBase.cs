@@ -11,6 +11,7 @@ namespace Calluna.DI
         private InstantiationInfoValidator _bindingValidator;
         private GameObjectInjector _gameObjectInjector;
         private readonly List<Type> _creationChain = new List<Type>();
+        private bool _postInit;
 
         private Resolver _diContainerResolver;
         private Binder _diContainerBinder;
@@ -63,6 +64,8 @@ namespace Calluna.DI
             _objects.Add(containers.Objects.Values);
             _gameObjects.Add(containers.GameObjectsContainer.Values);
         }
+
+        public void PostInit() => _postInit = true;
 
         public void ValidateBindings()
         {
@@ -178,17 +181,15 @@ namespace Calluna.DI
         {
             if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
                 return;
-            if (instance is not Initializable initializable || instance is Component)
+            if (instance is not Initializable initializable)
                 return;
-            
-            try
-            {
-                initializable.Initialize();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            // Components resolved before PostInit() is called are initialized by the
+            // hierarchy traversers (GameObjectInitializer / SceneObjectsLifeCycleActionCaller).
+            // After PostInit(), those traversers have already run, so we call Initialize() directly.
+            if (instance is Component && !_postInit)
+                return;
+
+            initializable.Initialize();
         }
 
         private void TryAddCleanable<TContract>(TContract contract)

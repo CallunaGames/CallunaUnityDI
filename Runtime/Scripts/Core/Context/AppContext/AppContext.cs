@@ -20,7 +20,6 @@ namespace Calluna.DI
         {
             _dIContext = resolver.Resolve<BasicDIContext>();
             InstallAppContextBindings();
-            DIContext.ValidateBindings();
             _sceneContextProvider = _resolver.Resolve<SceneContextProvider>();
         }
 

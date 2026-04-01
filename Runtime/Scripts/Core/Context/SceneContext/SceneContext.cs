@@ -48,7 +48,7 @@ namespace Calluna.DI
 
 		private void InstallSceneContextBindings()
         {
-            SceneContextInstaller installer = new SceneContextInstaller(gameObject, _dIContext);
+            SceneContextInstaller installer = new SceneContextInstaller(gameObject);
             installer.InstallBindings(_binder);
         }
 

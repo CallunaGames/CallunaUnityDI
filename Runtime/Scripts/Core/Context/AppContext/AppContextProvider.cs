@@ -4,11 +4,16 @@ namespace Calluna.DI
 {
     public class AppContextProvider
     {
+        private static AppContext _cachedAppContext;
+
         public AppContext FindOrCreateAppContext()
         {
-            AppContext appContext = Object.FindFirstObjectByType<AppContext>();
-            appContext ??= CreateAppContext();
-            return appContext;
+            if (_cachedAppContext == null)
+            {
+                _cachedAppContext = Object.FindFirstObjectByType<AppContext>();
+                _cachedAppContext ??= CreateAppContext();
+            }
+            return _cachedAppContext;
         }
 
         private AppContext CreateAppContext()

@@ -28,6 +28,7 @@ namespace Calluna.DI
             DoInjection();
             DIContext.CreateNonLazyInstances();
             InitializeObjects();
+            DIContext.PostInit();
         }
 
         protected virtual void OnApplicationQuit()

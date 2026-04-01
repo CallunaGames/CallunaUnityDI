@@ -6,6 +6,7 @@
 	    Binder Binder { get; }
         void ValidateBindings();
         void CreateNonLazyInstances();
+        void PostInit();
         TContract GetInstance<TContract>(Binding binding);
         void Clear();
 		void Reset();

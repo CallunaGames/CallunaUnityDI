@@ -2,11 +2,11 @@
 {
     public abstract class ScopedFactoryBase<T> : Injectable where T : new()
     {
-        private ChildDIContext _childContext;
-        
+        private Resolver _parentResolver;
+
         public virtual void Inject(Resolver resolver)
         {
-            _childContext = CreateDIContext(resolver);
+            _parentResolver = resolver;
         }
 
         private static ChildDIContext CreateDIContext(Resolver resolver)
@@ -17,19 +17,31 @@
 
         protected T DoCreation()
         {
-            InitScope(_childContext.Resolver, _childContext.Binder);
-            _childContext.ValidateBindings();
-            T result = new T();
-            (result as Injectable)?.Inject(_childContext.Resolver);
-            _childContext.MoveInstancesToParent();
-            ((DIContext)_childContext).Clear();
-            return result;
+            return DoCreation(CreateDIContext(_parentResolver));
         }
 
         protected T DoCreation<TArgument>(TArgument argument)
         {
-            _childContext.Binder.BindInstance(argument);
-            return DoCreation();
+            ChildDIContext childContext = CreateDIContext(_parentResolver);
+            childContext.Binder.BindInstance(argument);
+            return DoCreation(childContext);
+        }
+
+        private T DoCreation(ChildDIContext childContext)
+        {
+            try
+            {
+                InitScope(childContext.Resolver, childContext.Binder);
+                childContext.ValidateBindings();
+                T result = new T();
+                (result as Injectable)?.Inject(childContext.Resolver);
+                childContext.MoveInstancesToParent();
+                return result;
+            }
+            finally
+            {
+                ((DIContext)childContext).Clear();
+            }
         }
         
         protected abstract void InitScope(Resolver resolver, Binder binder);
