@@ -1,3 +1,25 @@
+## [1.3.0] - 2026-04-02
+
+### Breaking Changes
+- `DIContext` interface changed from `public` to `internal`. External code that references `DIContext` by name (e.g. variable declarations, casts, `typeof`) will no longer compile; rely on the concrete context types or the public `Resolver`/`Binder` interfaces instead.
+- `DIContext` interface gained a new `void PostInit()` member. Any external class that explicitly implements `DIContext` must add a `PostInit()` implementation.
+- `ChildDIContext` changed from `public` to `internal` and its public `Parent` property was removed. Code that holds a `ChildDIContext` reference or reads `Parent` must be removed or rewritten.
+- `GameObjectContextInstaller` public class deleted. Remove any scene components or code that reference this installer; its functionality is no longer required.
+- `SceneContextInstaller` changed from `public` to `internal` and its constructor no longer accepts a `DIContext` parameter. External instantiation of this class is no longer possible.
+- `NonResolvableContext` public class removed. Any code that instantiates or references this type must be deleted.
+- `DeepObjectActivator` public class removed. Use `BasicObjectActivator` or a custom `ObjectActivator` implementation instead.
+- `MissingSceneContextException` and `MultipleSceneContextsException` public exception types removed. Catch sites targeting these types must be updated or removed.
+
+### Added
+- Components that implement `Initializable` and are resolved lazily at mid-runtime (after the initial `PostInit()` phase) now have `Initialize()` called automatically. Previously, lazy-resolved Components never received `Initialize()`.
+
+### Fixed
+- `ScopedFactoryBase.DoCreation()` now creates a fresh child context on every call, preventing state from leaking between successive `Create()` calls. The child context is also cleared in a `try/finally` block, ensuring cleanup even when an exception is thrown during factory execution.
+- `MissingBindingException` now includes the requester type name for all injection paths. Previously, installer injection in `MonoContext` and instance-creation in `DIContextBase` threw the exception without the `— requested by <TypeName>` suffix that other paths already produced.
+
+### Performance
+- `AppContextProvider` caches the located `AppContext` instance after the first scene scan, eliminating repeated `FindObjectsByType` calls on every subsequent lookup.
+
 ## [1.2.0] - 2026-03-31
 
 ### Breaking Changes
