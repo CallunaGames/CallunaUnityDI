@@ -41,7 +41,7 @@ namespace Calluna.DI
             }
             catch (MissingBindingException e)
             {
-                throw new MissingBindingException($"{e.Message} — requested by {injectable.GetType().Name}");
+                throw new MissingBindingException(e, injectable.GetType());
             }
         }
     }

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -77,7 +76,14 @@ namespace Calluna.DI
 
         private void InstallBindings(Installer installer, Resolver resolver)
         {
-            (installer as Injectable)?.Inject(resolver);
+            try
+            {
+                (installer as Injectable)?.Inject(resolver);
+            }
+            catch (MissingBindingException e)
+            {
+                throw new MissingBindingException(e, installer.GetType());
+            }
             installer.InstallBindings(_binder);
         }
 

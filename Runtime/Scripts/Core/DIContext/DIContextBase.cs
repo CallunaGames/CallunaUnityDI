@@ -116,7 +116,15 @@ namespace Calluna.DI
             _creationChain.Add(concreteType);
             try
             {
-                TContract instance = _instanceFactory.Create<TContract>(Resolver, binding);
+                TContract instance;
+                try
+                {
+                    instance = _instanceFactory.Create<TContract>(Resolver, binding);
+                }
+                catch (MissingBindingException e)
+                {
+                    throw new MissingBindingException(e, concreteType);
+                }
                 TryInjection(instance, binding);
                 TryInitialize(instance, binding);
                 StoreInstance(instance, binding);
@@ -214,7 +222,7 @@ namespace Calluna.DI
             }
             catch (MissingBindingException e)
             {
-                throw new MissingBindingException($"{e.Message} — requested by {instance.GetType().Name}");
+                throw new MissingBindingException(e, instance.GetType());
             }
         }
 
