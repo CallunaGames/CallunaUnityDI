@@ -2,7 +2,8 @@
     "name": "Calluna.DI.Samples.ScopedFactorySample",
     "rootNamespace": "Calluna.DI.Samples.ScopedFactorySample",
     "references": [
-        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf"
+        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf",
+        "Calluna.DI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

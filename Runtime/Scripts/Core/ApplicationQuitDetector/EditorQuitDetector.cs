@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace Calluna.DI
 {
-	public class EditorQuitDetector : QuitDetector
+	internal class EditorQuitDetector : QuitDetector
 	{
 #if UNITY_EDITOR
 		private void Start()

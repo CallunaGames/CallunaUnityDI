@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 namespace Calluna.DI
 {
-    public class SceneInjector : Injectable
+    internal class SceneInjector : Injectable
     {
         private GameObjectInjector _injector;
 

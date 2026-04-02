@@ -2,7 +2,7 @@ using System;
 
 namespace Calluna.DI
 {
-    public class InstanceCreationModeValidatorImpl : InstanceCreationModeValidator
+    internal class InstanceCreationModeValidatorImpl : InstanceCreationModeValidator
     {
         public override void Validate(InstantiationInfo instantiationInfo)
         {

@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Calluna.DI
 {
     public class LazyModeBindingContext : BindingContextBase

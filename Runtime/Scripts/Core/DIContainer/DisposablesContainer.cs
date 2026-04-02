@@ -3,7 +3,7 @@ using System;
 
 namespace Calluna.DI
 {
-    public class DisposablesContainer
+    internal class DisposablesContainer
     {
         public IEnumerable<IDisposable> Values => _disposables;
         private HashSet<IDisposable> _disposables = new HashSet<IDisposable>();

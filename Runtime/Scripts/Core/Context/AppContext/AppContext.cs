@@ -4,7 +4,7 @@ namespace Calluna.DI
 {
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-10000)]
-    public class AppContext : MonoContext
+    internal class AppContext : MonoContext
     {
         private BasicDIContext _dIContext;
         protected override DIContext DIContext => _dIContext;

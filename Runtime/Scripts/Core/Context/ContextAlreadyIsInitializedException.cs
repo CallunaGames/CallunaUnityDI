@@ -3,7 +3,7 @@
 namespace Calluna.DI
 {
 	[Serializable]
-	public abstract class ContextAlreadyIsInitializedException : InvalidOperationException
+	internal abstract class ContextAlreadyIsInitializedException : InvalidOperationException
 	{
 		public ContextAlreadyIsInitializedException(Type contextType, string contextObjectName) : 
 			base($"The {contextType} with name {contextObjectName} has already been initialized")

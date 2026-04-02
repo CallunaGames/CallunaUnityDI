@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public class ChildDIContext : DIContextBase
+    internal class ChildDIContext : DIContextBase
     {
 	    private Resolver _resolver;
 	    private DIContext _parent;

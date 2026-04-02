@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public class Bootstrapper
+    internal class Bootstrapper
     {
         public Resolver Resolver { get; private set; }
 

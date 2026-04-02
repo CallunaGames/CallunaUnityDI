@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace Calluna.DI
 {
-    public class AppContextInstaller : Installer
+    internal class AppContextInstaller : Installer
     {
         private GameObject _contextObject;
 

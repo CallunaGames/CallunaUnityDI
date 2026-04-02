@@ -1,6 +1,6 @@
 ﻿namespace Calluna.DI
 {
-    public interface DIContext
+    internal interface DIContext
     {
 	    Resolver Resolver { get; }
 	    Binder Binder { get; }

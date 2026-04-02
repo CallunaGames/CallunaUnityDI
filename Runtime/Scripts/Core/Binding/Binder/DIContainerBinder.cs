@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-	public class DIContainerBinder : Binder
+	internal class DIContainerBinder : Binder
 	{
 		private BindingStorage _container;
 

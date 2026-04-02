@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public class ChildDIContextFactory : Factory<ChildDIContext, Resolver>
+    internal class ChildDIContextFactory : Factory<ChildDIContext, Resolver>
     {
         public ChildDIContext Create(Resolver resolver)
         {

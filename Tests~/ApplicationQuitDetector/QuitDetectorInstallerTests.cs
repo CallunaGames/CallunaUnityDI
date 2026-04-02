@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Calluna.DI.Tests
 {
-    public class QuitDetectorInstallerTests : InstallerTests<QuitDetectorInstaller>
+    internal class QuitDetectorInstallerTests : InstallerTests<QuitDetectorInstaller>
     {
 		private GameObject _gameObject;
 		private QuitDetectorInstaller _installer;

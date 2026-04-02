@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class BasicObjectActivator : ObjectActivator
+    internal class BasicObjectActivator : ObjectActivator
     {
         public void Activate(GameObject gameObject)
         {

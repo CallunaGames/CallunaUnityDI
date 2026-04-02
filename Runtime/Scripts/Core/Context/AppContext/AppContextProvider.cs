@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class AppContextProvider
+    internal class AppContextProvider
     {
         private static AppContext _cachedAppContext;
 

@@ -2,7 +2,7 @@
 
 namespace Calluna.DI
 {
-    public class BindingComparer : IEqualityComparer<Binding>
+    internal class BindingComparer : IEqualityComparer<Binding>
     {
         public bool Equals(Binding x, Binding y)
         {

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace  Calluna.DI
 {
-    public class DIInstanceFactory
+    internal class DIInstanceFactory
     {
          public TInstance Create<TInstance>(Resolver resolver, InstantiationInfo instantiationInfo)
         {

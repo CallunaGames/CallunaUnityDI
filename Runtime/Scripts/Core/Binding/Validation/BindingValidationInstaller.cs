@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-	public class BindingValidationInstaller : Installer
+	internal class BindingValidationInstaller : Installer
 	{
 		public void InstallBindings(Binder binder)
 		{

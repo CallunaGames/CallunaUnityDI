@@ -3,7 +3,7 @@
 namespace Calluna.DI
 {
 	[Serializable]
-	public class AppContextAlreadyIsInitializedException : ContextAlreadyIsInitializedException
+	internal class AppContextAlreadyIsInitializedException : ContextAlreadyIsInitializedException
 	{
 		public AppContextAlreadyIsInitializedException(string contextObjectName) : 
 			base(typeof(AppContext), contextObjectName)

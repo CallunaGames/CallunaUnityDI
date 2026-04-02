@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public interface Context
+    internal interface Context
     {
         public void Init(Resolver baseResolver);
         public void Reset();

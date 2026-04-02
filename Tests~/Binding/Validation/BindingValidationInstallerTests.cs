@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 namespace Calluna.DI.Tests
 {
-    public class BindingValidationInstallerTests : InstallerTests<BindingValidationInstaller>
+    internal class BindingValidationInstallerTests : InstallerTests<BindingValidationInstaller>
     {
         private TestBinder _binder;
 		private BindingValidationInstaller _installer;

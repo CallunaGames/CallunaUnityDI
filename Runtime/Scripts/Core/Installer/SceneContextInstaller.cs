@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class SceneContextInstaller : Installer
+    internal class SceneContextInstaller : Installer
     {
         private GameObject _contextObject;
 

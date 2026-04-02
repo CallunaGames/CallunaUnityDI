@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Calluna.DI
 {
-    public class BindingsContainer
+    internal class BindingsContainer
     {
         private readonly Dictionary<BindingKey, Binding> _bindings = 
             new Dictionary<BindingKey, Binding>(new BindingKeyComparer());

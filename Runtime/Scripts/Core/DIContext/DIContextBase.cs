@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public abstract class DIContextBase : DIContext, Injectable
+    internal abstract class DIContextBase : DIContext, Injectable
     {
         protected DIContainers _containers;
         private DIInstanceFactory _instanceFactory;

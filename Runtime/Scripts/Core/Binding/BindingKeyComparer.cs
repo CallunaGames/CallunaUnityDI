@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Calluna.DI
 {
-    public class BindingKeyComparer : IEqualityComparer<BindingKey>
+    internal class BindingKeyComparer : IEqualityComparer<BindingKey>
     {
         public bool Equals(BindingKey x, BindingKey y)
         {

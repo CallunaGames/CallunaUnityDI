@@ -6,7 +6,7 @@ namespace Calluna.DI
 {
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-9999)]
-    public class SceneContext : MonoContext
+    internal class SceneContext : MonoContext
     {
         private ChildDIContext _dIContext;
         protected override DIContext DIContext => _dIContext;

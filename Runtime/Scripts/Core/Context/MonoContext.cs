@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Calluna.DI
 {
     [DisallowMultipleComponent]
-    public abstract class MonoContext : MonoBehaviour, Context
+    internal abstract class MonoContext : MonoBehaviour, Context
     {
         [SerializeField] private MonoInstaller[] _monoInstallers = new MonoInstaller[0];
 

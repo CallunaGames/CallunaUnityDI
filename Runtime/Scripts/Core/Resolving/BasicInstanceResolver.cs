@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Calluna.DI
 {
-    public class BasicInstanceResolver : ResolverBase
+    internal class BasicInstanceResolver : ResolverBase
     {
         private Dictionary<BindingKey, object> _instances =
             new Dictionary<BindingKey, object>();

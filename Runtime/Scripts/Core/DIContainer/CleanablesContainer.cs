@@ -5,7 +5,7 @@ using Object = System.Object;
 
 namespace Calluna.DI
 {
-    public class CleanablesContainer
+    internal class CleanablesContainer
     {
         public IEnumerable<Cleanable> Values => _cleanables;
         private List<Cleanable> _cleanables = new ();

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-	public class GameObjectContextsReseter
+	internal class GameObjectContextsReseter
 	{
 		public void Reset(GameObject gameObject)
 		{

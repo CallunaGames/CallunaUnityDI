@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class GameObjectInjector
+    internal class GameObjectInjector
     {
         public void InjectIntoHierarchy(Transform root, Resolver resolver)
         {

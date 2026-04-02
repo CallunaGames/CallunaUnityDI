@@ -1,8 +1,9 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Calluna.DI
 {
-	public class QuitDetectorInstaller : Installer
+	internal class QuitDetectorInstaller : Installer
 	{
 		private readonly GameObject _componentHook;
 

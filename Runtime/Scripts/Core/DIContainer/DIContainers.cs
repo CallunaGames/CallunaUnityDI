@@ -2,13 +2,13 @@ using System;
 
 namespace Calluna.DI
 {
-    public class DIContainers : BindingStorage
+    internal class DIContainers : BindingStorage
     {
-        public BindingsContainer Bindings { get; }
-        public SingleInstancesContainer SingleInstances { get; }
-        public NonLazyContainer NonLazyBindings { get; }
-        public DisposablesContainer Disposables { get; }
-        public ObjectsContainer Objects { get; }
+        internal BindingsContainer Bindings { get; }
+        internal SingleInstancesContainer SingleInstances { get; }
+        internal NonLazyContainer NonLazyBindings { get; }
+        internal DisposablesContainer Disposables { get; }
+        internal ObjectsContainer Objects { get; }
 		internal GameObjectsContainer GameObjectsContainer { get; }
 		internal CleanablesContainer CleanablesContainer { get; }
 

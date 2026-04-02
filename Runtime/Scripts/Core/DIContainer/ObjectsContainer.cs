@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Calluna.DI
 {
-    public class ObjectsContainer
+    internal class ObjectsContainer
     {
         public IEnumerable<UnityEngine.Object> Values => _objects;
         private HashSet<UnityEngine.Object> _objects = new HashSet<UnityEngine.Object>();

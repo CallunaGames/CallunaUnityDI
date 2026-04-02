@@ -51,7 +51,7 @@ Attach one `SceneContext` per scene. It finds or creates an `AppContext` on `Awa
 Attach to any GameObject to create a local scope. Injection is limited to the GameObject's hierarchy. Multiple `GameObjectContext` instances per scene are allowed, including nested ones.
 
 ### MonoContext (base class)
-`abstract MonoContext : MonoBehaviour, Context`
+`abstract MonoContext : MonoBehaviour`
 
 All three context MonoBehaviours share this base class. The one public member of interest is:
 
@@ -65,14 +65,12 @@ All three context MonoBehaviours share this base class. The one public member of
 
 | Interface | Purpose |
 |-----------|---------|
-| `DIContext` | Exposes `Resolver` and `Binder` for the current scope. |
 | `Binder` | Fluent entry point for all binding operations. |
 | `Resolver` | Looks up instances by type. |
 | `Injectable` | Implement to receive injection: `void Inject(Resolver resolver)`. |
 | `Initializable` | Called after all injection in the scene is complete: `void Initialize()`. |
 | `Cleanable` | Called when the context resets: `void Clean()`. |
 | `Installer` | Groups related bindings; base classes are `MonoInstaller` and `ScriptableObjectInstaller`. |
-| `Context` | Implemented by all three context MonoBehaviours. |
 
 ---
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-	public class ApplicationQuitDetector : QuitDetector
+	internal class ApplicationQuitDetector : QuitDetector
 	{
 		private void Start()
 		{

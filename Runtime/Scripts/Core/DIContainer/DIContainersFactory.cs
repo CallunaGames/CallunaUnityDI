@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public class DIContainersFactory : Factory<DIContainers>, Injectable
+    internal class DIContainersFactory : Factory<DIContainers>, Injectable
     {
         private GameObjectContextsReseter _contextsReseter;
 

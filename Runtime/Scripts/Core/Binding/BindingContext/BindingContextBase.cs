@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using UnityEngine;
-
 namespace Calluna.DI
 {
     public abstract class BindingContextBase
@@ -9,7 +6,7 @@ namespace Calluna.DI
         protected Binding _binding => _arguments.Binding;
         protected BindingStorage _bindingStorage => _arguments.BindingStorage;
 
-        public BindingContextBase(BindingArguments arguments)
+        internal BindingContextBase(BindingArguments arguments)
         {
             _arguments = arguments;
         }

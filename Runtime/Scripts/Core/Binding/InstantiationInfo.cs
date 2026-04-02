@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Calluna.DI
 {
-    public interface InstantiationInfo
+    internal interface InstantiationInfo
     {
         InstanceCreationMode CreationMode { get; set; }
         Func<object> ProvideInstanceFunction { get; set; }

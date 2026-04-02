@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-	public class GameObjectsContainer
+	internal class GameObjectsContainer
 	{
 		public IEnumerable<GameObject> Values => _objects;
         private HashSet<GameObject> _objects = new HashSet<GameObject>();

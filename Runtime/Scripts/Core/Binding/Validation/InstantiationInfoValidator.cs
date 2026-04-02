@@ -2,7 +2,7 @@ using System;
 
 namespace Calluna.DI
 {
-    public class InstantiationInfoValidator : Injectable
+    internal class InstantiationInfoValidator : Injectable
     {
         private InstanceCreationModeValidator _fromValidator;
 

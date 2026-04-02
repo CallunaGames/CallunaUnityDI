@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class SceneContextProvider: Injectable
+    internal class SceneContextProvider: Injectable
     {
         private const string alreadyAddedExceptionMessage = "The scene with iD {0} has already been added to the provider.";
         private const string notAddedExceptionMessage = "The scene with iD {0} has not been added to the provider. Therefore removing it is not possible";

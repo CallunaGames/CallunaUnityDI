@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-	public class BasicDIContext : DIContextBase
+	internal class BasicDIContext : DIContextBase
 	{
 		protected override Resolver CreateResolver(BindingsContainer container)
 		{

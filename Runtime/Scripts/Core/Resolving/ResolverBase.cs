@@ -2,7 +2,7 @@ using System;
 
 namespace Calluna.DI
 {
-	public abstract class ResolverBase : Resolver
+	internal abstract class ResolverBase : Resolver
 	{
 		public TContract Resolve<TContract>()
 		{

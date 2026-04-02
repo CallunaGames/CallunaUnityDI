@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-    public class ChildResolver : ResolverBase
+    internal class ChildResolver : ResolverBase
 	{
 		private readonly Resolver _parent;
 		private readonly Resolver _baseResolver;

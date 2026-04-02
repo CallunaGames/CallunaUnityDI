@@ -1,6 +1,6 @@
 namespace Calluna.DI
 {
-	public class DIContainerResolver : ResolverBase
+	internal class DIContainerResolver : ResolverBase
 	{
 		private BindingsContainer _container;
 		private DIContext _diContext;
