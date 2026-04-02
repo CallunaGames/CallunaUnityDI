@@ -1,6 +1,6 @@
 ﻿namespace Calluna.DI
 {
-    public abstract class ScopedFactoryBase<T> : Injectable where T : new()
+    public abstract class ScopedFactoryBase<T> : Injectable
     {
         private Resolver _parentResolver;
 
@@ -33,8 +33,7 @@
             {
                 InitScope(childContext.Resolver, childContext.Binder);
                 childContext.ValidateBindings();
-                T result = new T();
-                (result as Injectable)?.Inject(childContext.Resolver);
+                T result = childContext.Resolver.Resolve<T>();
                 childContext.MoveInstancesToParent();
                 return result;
             }
@@ -43,11 +42,11 @@
                 ((DIContext)childContext).Clear();
             }
         }
-        
+
         protected abstract void InitScope(Resolver resolver, Binder binder);
     }
 
-    public abstract class ScopedFactory<T> : ScopedFactoryBase<T>, Factory<T> where T : new()
+    public abstract class ScopedFactory<T> : ScopedFactoryBase<T>, Factory<T>
     {
         public T Create()
         {
@@ -55,7 +54,7 @@
         }
     }
 
-    public abstract class ScopedFactory<T, TArgument> : ScopedFactoryBase<T>, Factory<T, TArgument> where T : new()
+    public abstract class ScopedFactory<T, TArgument> : ScopedFactoryBase<T>, Factory<T, TArgument>
     {
         public T Create(TArgument arg)
         {

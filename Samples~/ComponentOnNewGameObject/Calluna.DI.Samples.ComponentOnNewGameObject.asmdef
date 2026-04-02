@@ -2,15 +2,14 @@
     "name": "Calluna.DI.Samples.ComponentOnNewGameObject",
     "rootNamespace": "Calluna.DI.Samples.ComponentOnNewGameObject",
     "references": [
-        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf",
-        "Calluna.DI"
+        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

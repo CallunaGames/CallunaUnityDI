@@ -21,15 +21,10 @@ namespace Calluna.DI.Samples.ScopedFactory
         {
             _bar1 = _barFactory.Create(_foo1);
             _bar2 = _barFactory.Create(_foo2);
-            
-            _bar1.Initialize();
-            _bar2.Initialize();
         }
 
         public void Clean()
         {
-            _bar1.Clean();
-            _bar2.Clean();
         }
     }
 }

@@ -59,7 +59,7 @@ namespace Calluna.DI
 
         void DIContext.TransferInstancesOf(DIContainers containers)
         {
-            _cleanables.Add(containers.CleanablesContainer.Values);
+            _cleanables.TryAdd(containers.CleanablesContainer.Values);
             _disposables.Add(containers.Disposables.Values);
             _objects.Add(containers.Objects.Values);
             _gameObjects.Add(containers.GameObjectsContainer.Values);
@@ -187,7 +187,7 @@ namespace Calluna.DI
 
         private void TryInitialize<TContract>(TContract instance, InstantiationInfo instantiationInfo)
         {
-            if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
+            if (instantiationInfo.CreationMode is InstanceCreationMode.FromInstance or InstanceCreationMode.FromFactory)
                 return;
             if (instance is not Initializable initializable)
                 return;
@@ -204,7 +204,7 @@ namespace Calluna.DI
         {
             if (contract is not Cleanable cleanable || contract is Component)
                 return;
-            _cleanables.Add(cleanable);
+            _cleanables.TryAdd(cleanable);
         }
 
         private void InjectIntoTransform(Transform transform, InstantiationInfo instantiationInfo)

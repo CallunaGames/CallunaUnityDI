@@ -9,6 +9,7 @@ namespace Calluna.DI.Samples.ScopedFactory
         protected override void InitScope(Resolver resolver, Binder binder)
         {
             binder.BindInstance("Bar" + _number);
+            binder.BindToNewSelf<Bar>();
             _number++;
         }
     }

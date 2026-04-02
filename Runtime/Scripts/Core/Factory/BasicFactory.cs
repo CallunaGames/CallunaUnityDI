@@ -14,6 +14,8 @@ namespace Calluna.DI
 			TResult instance = new TResult();
 			if (instance is Injectable injectable)
 				injectable.Inject(resolver);
+			if (instance is Initializable initializable)
+				initializable.Initialize();
 			return instance;
 		}
 	}

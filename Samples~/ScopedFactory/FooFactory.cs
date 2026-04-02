@@ -13,6 +13,7 @@ namespace Calluna.DI.Samples.ScopedFactory
             Vector2Int numbersRange = resolver.Resolve<Vector2Int>();
             binder.BindInstance("Foo" + _number);
             binder.Bind<IReadOnlyList<int>>().ToInstance(CreateNumbers(numbersAmount, numbersRange));
+            binder.BindToNewSelf<Foo>();
             _number++;
         }
 

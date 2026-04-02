@@ -8,7 +8,7 @@ namespace Calluna.DI
     internal class CleanablesContainer
     {
         public IEnumerable<Cleanable> Values => _cleanables;
-        private List<Cleanable> _cleanables = new ();
+        private HashSet<Cleanable> _cleanables = new();
 
         public void Clean()
         {
@@ -30,16 +30,19 @@ namespace Calluna.DI
             }
         }
 
-        public void Add(Cleanable cleanable)
+        public void TryAdd(Cleanable cleanable)
         {
             _cleanables.Add(cleanable);
         }
 
-        public void Add(IEnumerable<Cleanable> cleanables)
+        public void TryAdd(IEnumerable<Cleanable> cleanables)
         {
-            _cleanables.AddRange(cleanables);
+            foreach (Cleanable cleanable in cleanables)
+            {
+                TryAdd(cleanable);
+            }
         }
-        
+
         public void Clear()
         {
             _cleanables.Clear();
