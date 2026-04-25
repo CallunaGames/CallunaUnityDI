@@ -10,7 +10,7 @@
   "licensesUrl": "",
   "dependencies":
   {
-    "com.calluna.core": "1.3.0"
+    "com.calluna.core": "1.4.0"
   },
   "samples": [
     {
