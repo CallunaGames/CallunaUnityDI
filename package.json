@@ -1,15 +1,16 @@
 {
   "name": "com.calluna.di",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "displayName": "Calluna Unity Dependency Injection",
   "description": "A lightweight dependency injection framework for the Unity Engine.",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityDI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.3.1...v1.4.0",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityDI/compare/v1.4.0...v1.4.1",
   "licensesUrl": "",
   "dependencies":
   {
+    "com.calluna.core": "1.4.0"
   },
   "samples": [
     {
@@ -41,6 +42,11 @@
       "displayName": "Scoped Factory",
       "description": "Example of scoped factories",
       "path": "Samples~/ScopedFactory"
+    },
+    {
+      "displayName": "Event Bus",
+      "description": "Enemy wave demo: killing enemies earns gold, clearing a wave starts the next one automatically",
+      "path": "Samples~/EventBus"
     }
   ],
   "keywords": [

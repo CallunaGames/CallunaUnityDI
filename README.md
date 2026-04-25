@@ -18,6 +18,7 @@ Why use dependency injection at all? Unity's built-in approach to dependency inv
 - Scoped factories that create instances inside a short-lived child scope.
 - Non-resolvable bindings for fire-and-forget instantiation.
 - Circular dependency detection.
+- Built-in `IEventBus` singleton — automatically bound at `AppContext` scope, no installer code required.
 
 ---
 
@@ -581,6 +582,81 @@ See the *Pooling* sample for a complete scene example.
 
 ---
 
+## Event Bus
+
+`IEventBus` is a typed publish/subscribe message bus. One `EventBus` instance is automatically bound as a singleton in `AppContext` scope by the framework — no installer code is required. Resolve it anywhere via `resolver.Resolve<IEventBus>()`.
+
+### Interface
+
+```
+IEventBus
+  void Subscribe<TEvent>(Action<TEvent> listener)
+  void Unsubscribe<TEvent>(Action<TEvent> listener)
+  void Publish<TEvent>(TEvent evt)
+```
+
+The concrete `EventBus` (from `com.calluna.core`) uses breadth-first, re-entrancy-safe dispatch: events published from inside a listener are queued and processed after the current dispatch batch completes.
+
+### Usage
+
+```csharp
+// Define an event (plain struct or class)
+public struct EnemyDiedEvent
+{
+    public int GoldReward;
+}
+
+// Publisher — no setup needed beyond resolving IEventBus
+public class EnemyController : MonoBehaviour, Injectable
+{
+    private IEventBus _eventBus;
+
+    void Injectable.Inject(Resolver resolver)
+    {
+        _eventBus = resolver.Resolve<IEventBus>();
+    }
+
+    public void Die()
+    {
+        _eventBus.Publish(new EnemyDiedEvent { GoldReward = 10 });
+    }
+}
+
+// Subscriber — subscribe in Initialize(), unsubscribe in Clean()
+public class GoldService : Injectable, Initializable, Cleanable
+{
+    private IEventBus _eventBus;
+
+    void Injectable.Inject(Resolver resolver)
+    {
+        _eventBus = resolver.Resolve<IEventBus>();
+    }
+
+    void Initializable.Initialize()
+    {
+        _eventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied);
+    }
+
+    void Cleanable.Clean()
+    {
+        _eventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+    }
+
+    private void OnEnemyDied(EnemyDiedEvent evt)
+    {
+        Gold += evt.GoldReward;
+    }
+
+    public int Gold { get; private set; }
+}
+```
+
+Always unsubscribe in `Cleanable.Clean()` — failing to do so prevents the subscriber from being garbage-collected for the lifetime of the bus.
+
+See the *Event Bus* sample for a full scene example.
+
+---
+
 ## Application Quit Detector
 
 `QuitDetector` is an abstract `MonoBehaviour` that fires a callback when the application quits, allowing cleanup code to be skipped or handled gracefully during teardown.
@@ -626,6 +702,7 @@ The following samples are importable via the Unity Package Manager.
 | **Pooling** | Full scene using `MonoPoolInstaller` and the `Pool<T>` / `Pool<T,TArg>` interfaces. |
 | **Scene Dependencies** | Shows how to wire a `SceneContext` to another scene's context using the Parent Context ID field. |
 | **Scoped Factory** | Shows `ScopedFactory<T>` and `ScopedFactory<T, TArgument>` with per-product scope bindings. |
+| **Event Bus** | Enemy wave demo: killing enemies earns gold, clearing a wave starts the next one automatically. Demonstrates `IEventBus` subscribe/publish/unsubscribe with `Injectable`/`Initializable`/`Cleanable`. |
 
 ---
 

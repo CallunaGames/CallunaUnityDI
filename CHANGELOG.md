@@ -1,3 +1,13 @@
+## [1.4.1] - 2026-04-25
+
+### Added
+- `IEventBus` is automatically bound as a singleton in `AppContext` scope. Consumers can resolve it via `resolver.Resolve<IEventBus>()` without writing any installer code.
+- New importable sample "Event Bus" (`Samples~/EventBus/`) — an enemy wave demo that demonstrates typed publish/subscribe combined with the DI lifecycle.
+
+### Changed
+- `com.calluna.core` (1.3.0) is now declared as a UPM dependency. Projects that embed this package will have Core resolved automatically by the Package Manager.
+- The `Calluna.DI` runtime assembly now references the `Calluna.Core` asmdef, making Core types available without a manual assembly reference.
+
 ## [1.4.0] - 2026-04-24
 
 ### Breaking Changes

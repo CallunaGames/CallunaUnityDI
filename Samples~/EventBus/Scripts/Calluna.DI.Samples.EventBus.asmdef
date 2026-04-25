@@ -1,7 +1,10 @@
 {
-    "name": "Calluna.DI",
-    "rootNamespace": "Calluna.DI",
-    "references": ["Calluna.Core"],
+    "name": "Calluna.DI.Samples.EventBus",
+    "rootNamespace": "Calluna.DI.Examples.EventBus",
+    "references": [
+        "Calluna.DI",
+        "Calluna.Core"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

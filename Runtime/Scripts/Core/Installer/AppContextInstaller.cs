@@ -1,3 +1,4 @@
+using Calluna;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,10 @@ namespace Calluna.DI
 
         public void InstallBindings(Binder binder)
         {
+            binder.Bind<IEventBus>()
+                .ToNew<EventBus>()
+                .AsSingle();
+
             binder.BindToNewSelf<GameObjectInjector>();
             
             binder.BindToNewSelf<GameObjectContextsReseter>();
