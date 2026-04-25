@@ -86,7 +86,7 @@ Specialized storage split by concern: `BindingsContainer`, `SingleInstancesConta
 
 - **Pooling** (`Runtime/Scripts/Core/Pooling/`): `MonoPool<T>` / `AbstractMonoPool<T>` — pooling for MonoBehaviours, configured via `MonoPoolInstaller`.
 - **Factory** (`Runtime/Scripts/Core/Factory/`): `Factory<T>` interface for `FromFactory` creation mode; `ScopedFactory` creates instances in a child scope.
-- **Non-Resolvable Instances**: `CreateNonResolvableInstance()` binding — instantiates without making the type resolvable; must use `.NonLazy()`.
+- **Non-Resolvable Instances**: `.AsNonResolvable()` terminal on the binding chain — instantiates and injects without registering the type for resolution; creation is always eager.
 - **Application Quit Detector** (`Runtime/Scripts/Core/ApplicationQuitDetector/`): Guards cleanup during Unity app shutdown.
 
 ## Assembly Definitions

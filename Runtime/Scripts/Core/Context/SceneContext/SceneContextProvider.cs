@@ -84,6 +84,35 @@ namespace Calluna.DI
                 _sceneToDependencyAmount[iD] > 0;
         }
 
+        internal IReadOnlyList<SceneContext> GetInDependencyOrder()
+        {
+            // Kahn's algorithm — children (no dependents) before parents
+            var counts = new Dictionary<string, int>(_sceneToDependencyAmount);
+            var snapshot = new Dictionary<string, SceneContext>(_sceneContexts);
+            var sorted = new List<SceneContext>(snapshot.Count);
+            var queue = new Queue<SceneContext>();
+
+            foreach (var kvp in snapshot)
+                if (!counts.TryGetValue(kvp.Key, out int c) || c == 0)
+                    queue.Enqueue(kvp.Value);
+
+            while (queue.Count > 0)
+            {
+                var ctx = queue.Dequeue();
+                sorted.Add(ctx);
+                string parentID = ctx.ParentContextID;
+                if (!string.IsNullOrEmpty(parentID) && snapshot.ContainsKey(parentID))
+                {
+                    counts.TryGetValue(parentID, out int pc);
+                    counts[parentID] = pc - 1;
+                    if (counts[parentID] <= 0)
+                        queue.Enqueue(snapshot[parentID]);
+                }
+            }
+
+            return sorted;
+        }
+
         private void ValidateGet(string iD)
         {
             if (!_sceneContexts.ContainsKey(iD))

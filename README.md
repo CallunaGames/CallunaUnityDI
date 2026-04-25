@@ -84,7 +84,7 @@ Use the `Binder` inside an installer's `InstallBindings` method to declare how t
 |--------|----------|
 | `Bind<TContract>()` | Contract type differs from (or is an interface of) the concrete type. |
 | `BindToSelf<T>()` | Contract and concrete type are the same. |
-| `BindToNewSelf<T>()` | Shorthand for `BindToSelf<T>().FromNew()` — `T` must have a parameterless constructor. |
+| `BindToNewSelf<T>()` | Shorthand for `Bind<T>().ToNew<T>()` — `T` must have a parameterless constructor. |
 | `BindInstance<T>(instance)` | You already hold an instance. |
 | `BindComponent<T>()` | `T` is a `Component` — unlocks component-specific creation modes. |
 | `BindObject<T>()` | `T` is a `UnityEngine.Object` — unlocks `FromResources`. |
@@ -92,17 +92,18 @@ Use the `Binder` inside an installer's `InstallBindings` method to declare how t
 ### Binding fluent chain
 
 ```
-Bind<TContract>()
-  [.And<TContract2>() ...]            // bind additional contract types to the same concrete
+Bind<TContract>(id?)
+  [.And<TContract2>(id?) ...]         // bind additional contract types to the same concrete
   .ToNew<TConcrete>()                 // new() creation mode — TConcrete must have a parameterless constructor
   // or: .To<TConcrete>()             // opens FromInstance / FromMethod / FromFactory
   // or: .ToComponent<TConcrete>()    // opens component-specific creation modes
   // or: .ToObject<TConcrete>()       // opens FromResources
-  // or: .ToInstance(existingObject)  // binds a pre-existing instance directly
-  [.WithArgument<TArg>(value)]        // pass arguments to be resolved as dependencies
+  // or: .ToInstance(existingObject)  // binds a pre-existing instance directly (always AsSingle)
+  [.WithArgument<TArg>(value, id?)]   // pass arguments to be resolved as dependencies
   [.WithInjection() | .WithoutInjection()]
   .AsSingle()                         // or: .PerRequest()
   [.NonLazy()]                        // optional: create immediately, do not wait for first resolve
+  // or: .AsNonResolvable()           // instantiate and inject without registering for resolution (always eager)
 ```
 
 ### Creation modes
@@ -116,7 +117,7 @@ Bind<TContract>()
 | `FromNewPrefabInstance(prefab)` | Instantiates a prefab and returns the component. (`BindComponent` only) |
 | `FromNewResourcePrefabInstance(path)` | Loads a prefab from Resources and instantiates it. (`BindComponent` only) |
 | `FromNewComponentOn(gameObject)` | Adds the component to an existing GameObject. (`BindComponent` only) |
-| `FromNewComponentOnNewGameObject(name, parent)` | Creates a new GameObject and adds the component to it. (`BindComponent` only) |
+| `FromNewComponentOnNewGameObject(name, parent, worldPositionStays)` | Creates a new GameObject and adds the component to it. (`BindComponent` only) |
 | `FromResources(path)` | Loads an asset directly from Resources. (`BindObject` only) |
 
 ### Cardinality
@@ -251,10 +252,23 @@ public class PlayerController : MonoBehaviour, Injectable
 | Method | Description |
 |--------|-------------|
 | `Resolve<T>()` | Returns the bound instance; throws if not found. |
-| `Resolve<T>(IComparable id)` | Resolves a binding with a specific ID. |
+| `Resolve<T>(IComparable id)` | Resolves a binding registered under the given ID. |
+| `Resolve<T>(BindingKey key)` | Resolves a binding using a pre-built `BindingKey`. |
 | `ResolveOptional<T>()` | Returns the bound instance or `default` if not found. |
 | `ResolveOptional<T>(IComparable id)` | Optional resolve with an ID. |
+| `ResolveOptional<T>(BindingKey key)` | Optional resolve using a pre-built `BindingKey`. |
 | `IsResolvable(BindingKey key)` | Returns `true` if the key has a registered binding. |
+
+`BindingKey` is a value type that pairs a `Type` with an optional `IComparable` ID. Construct one with `new BindingKey(typeof(T))` or `new BindingKey(typeof(T), id)`. Binding IDs let you register multiple bindings of the same contract type and resolve each one by ID:
+
+```csharp
+// Bind the same contract twice under different IDs
+binder.Bind<IAudioChannel>(AudioChannel.Music).ToNew<MusicChannel>().AsSingle();
+binder.Bind<IAudioChannel>(AudioChannel.Sfx).ToNew<SfxChannel>().AsSingle();
+
+// Resolve by ID
+IAudioChannel music = resolver.Resolve<IAudioChannel>(AudioChannel.Music);
+```
 
 ### Initializable
 
@@ -378,12 +392,20 @@ public class Spawner : Injectable
 
 ### PrefabFactory
 
-`PrefabFactory<TPrefab>` is a ready-made factory for instantiating prefabs. It is wired up automatically by `MonoPoolInstaller` and can also be used standalone.
+`PrefabFactory<TPrefab>` is a ready-made factory for instantiating a single prefab type. Pass the prefab via `WithArgument`. It is wired up automatically by `MonoPoolInstaller` and can also be used standalone.
+
+```
+PrefabFactory<TPrefab>          : Factory<TPrefab>, Factory<TPrefab, PrefabInstantiationArguments>
+PrefabFactory<TPrefab, TArg>    : Factory<TPrefab, TArg>, Factory<TPrefab, TArg, PrefabInstantiationArguments>
+PrefabFactory                   — generic Create<TPrefab>(prefab, ...) overloads; used by multi-prefab pools
+```
 
 ```csharp
 binder.Bind<Factory<BulletView>>()
+    .And<Factory<BulletView, PrefabInstantiationArguments>>()
     .ToNew<PrefabFactory<BulletView>>()
-    .WithArgument(_bulletPrefab);
+    .WithArgument(_bulletPrefab)
+    .AsSingle();
 ```
 
 `PrefabInstantiationArguments` controls where and how the prefab is placed:
@@ -392,14 +414,39 @@ binder.Bind<Factory<BulletView>>()
 PrefabInstantiationArguments args = new PrefabInstantiationArguments
 {
     Parent = _container,
-    Position = spawnPoint
+    Position = spawnPoint,
+    Rotation = Quaternion.identity,   // optional
+    Scale = Vector3.one,              // optional
+    WorldPositionStays = false,       // optional
+    FitRectTransform = false          // optional — stretches RectTransform to fill parent
 };
 factory.Create(args);
 
 // Helpers for UI prefabs:
-PrefabInstantiationArguments.CreateUIArgs(parent);
-PrefabInstantiationArguments.CreateFittedUIArgs(parent);
+PrefabInstantiationArguments.CreateUIArgs(parent);        // sets Parent + Scale
+PrefabInstantiationArguments.CreateFittedUIArgs(parent);  // sets Parent + Scale + FitRectTransform
 ```
+
+### BasicFactory
+
+`BasicFactory<TResult>` is a ready-made factory for plain C# types that have a parameterless constructor. Use it when you need `FromFactory` semantics without writing a custom factory class.
+
+```
+BasicFactory<TResult>       : Factory<TResult>
+BasicFactory<TResult, TArg> : Factory<TResult, TArg>
+```
+
+```csharp
+binder.Bind<Factory<ScoreEntry>>()
+    .ToNew<BasicFactory<ScoreEntry>>()
+    .AsSingle();
+
+binder.BindToSelf<ScoreEntry>()
+    .FromFactory()
+    .PerRequest();
+```
+
+`BasicFactory<TResult, TArg>` passes `TArg` as a resolved dependency into the created instance's `Inject` call.
 
 ---
 
@@ -457,13 +504,15 @@ The pooling system reuses `MonoBehaviour` instances instead of instantiating and
 ### Class hierarchy
 
 ```
-Pool<TItem>                               (interface — Request() / Return(item))
-Pool<TItem, TArg>                         (interface — Request(arg) / Return(item))
-MonoPool<TItem> : Pool<TItem>, Pool<TItem, PrefabInstantiationArguments>
+Pool<TItem>                                        (interface — Request() / Return(item))
+Pool<TItem, TArg>                                  (interface — Request(arg) / Return(item))
+Pool<TItem, TArg1, TArg2>                          (interface — Request(arg1, arg2) / Return(item))
+Pool<TItem, TArg1, TArg2, TArg3>                   (interface — Request(arg1, arg2, arg3) / Return(item))
+MonoPool<TItem>     : Pool<TItem>, Pool<TItem, PrefabInstantiationArguments>
 MonoPool<TItem, TArg> : Pool<TItem, TArg>, Pool<TItem, TArg, PrefabInstantiationArguments>
-AbstractPoolItem<TComparable>             (interface — ItemId)
-AbstractMonoPool<TItem, TComparable>      (multi-prefab pool keyed by ID)
-AbstractMonoPool<TItem, TComparable, TArg>
+AbstractPoolItem<TComparable>                      (interface — ItemId)
+AbstractMonoPool<TItem, TComparable>               : Pool<TItem, TComparable>, Pool<TItem, TComparable, PrefabInstantiationArguments>
+AbstractMonoPool<TItem, TComparable, TArg>         : Pool<TItem, TComparable, TArg>, Pool<TItem, TComparable, TArg, PrefabInstantiationArguments>
 ```
 
 ### MonoPool — single-prefab pool
@@ -495,11 +544,13 @@ public class GunController : Injectable
 }
 ```
 
-Use `MonoPoolInstaller<TItem, TArgument>` when each requested item needs an argument at creation time:
+Use `MonoPoolInstaller<TItem, TArgument>` when each requested item needs a typed argument at creation time. It binds `Pool<TItem, TArgument>` and `Pool<TItem, TArgument, PrefabInstantiationArguments>`:
 
 ```csharp
-// Pool<EnemyView, EnemyData>
-EnemyView enemy = _pool.Request(enemyData);
+// Attach MonoPoolInstaller<EnemyView, EnemyData> and assign the prefab.
+Pool<EnemyView, EnemyData> pool = resolver.Resolve<Pool<EnemyView, EnemyData>>();
+EnemyView enemy = pool.Request(enemyData);
+pool.Return(enemy);
 ```
 
 ### AbstractMonoPool — multi-prefab pool keyed by ID
@@ -516,11 +567,13 @@ public class EnemyView : MonoBehaviour, AbstractPoolItem<EnemyType>
 }
 ```
 
-Attach `AbstractMonoPoolInstaller<EnemyView, EnemyType>` to a GameObject and assign the prefab array in the Inspector.
+Attach `AbstractMonoPoolInstaller<EnemyView, EnemyType>` to a GameObject and assign the prefab array in the Inspector. It binds `Pool<EnemyView, EnemyType>` and `Pool<EnemyView, EnemyType, PrefabInstantiationArguments>`.
+
+Use `AbstractMonoPoolInstaller<TItem, TComparable, TArg>` when items also require a typed argument on each request:
 
 ```csharp
-Pool<EnemyView, EnemyType> pool = resolver.Resolve<Pool<EnemyView, EnemyType>>();
-EnemyView enemy = pool.Request(EnemyType.Ranged);
+Pool<EnemyView, EnemyType, EnemyData> pool = resolver.Resolve<Pool<EnemyView, EnemyType, EnemyData>>();
+EnemyView enemy = pool.Request(EnemyType.Ranged, enemyData);
 pool.Return(enemy);
 ```
 

@@ -1,3 +1,13 @@
+## [1.4.0] - 2026-04-24
+
+### Breaking Changes
+- `ScopedFactory<T>` no longer requires `T : new()`. `Create()` now resolves `T` through the child container's `Resolver` instead of calling `new T()` directly. Callers must bind `T` (and any of its dependencies) inside `InitScope`; failing to do so will produce a `MissingBindingException` at runtime.
+- Approximately 20 additional types have been narrowed from `public` to `internal`, beyond the handful listed in the 1.3.0 entry. The 1.3.0 entry named the most prominent removals; the full set of affected commits moved roughly 40 types total across both releases. Any external code that references types not covered by the 1.3.0 entry by name (variable declarations, casts, `typeof`, subclassing) will no longer compile; rely on the documented public interfaces instead.
+
+### Fixed
+- `BasicFactory` now calls `Initialize()` on created instances that implement `Initializable`. Previously, only `Inject()` was called, leaving factory-created objects in an uninitialised state if they relied on `Initialize()` for post-injection setup.
+- `AppContext` now resets `SceneContext`s in dependency order on application quit, ensuring that a child context is always cleaned up before the parent it depends on. Previously, contexts could be torn down in an arbitrary order, causing cleanup errors when a scene accessed bindings from an already-reset parent context.
+
 ## [1.3.0] - 2026-04-02
 
 ### Breaking Changes

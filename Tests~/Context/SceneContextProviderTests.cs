@@ -152,6 +152,106 @@ namespace Calluna.DI.Tests
             Assert.Throws<SceneContextProvider.GetException>(() => _provider.Get(id));
         }
 
+        // --- GetInDependencyOrder ---
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with no contexts => returns empty list?")]
+        public IEnumerator GetInDependencyOrder_NoContexts_ReturnsEmptyList()
+        {
+            yield return null;
+            Assert.IsEmpty(_provider.GetInDependencyOrder());
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with a single context => returns that context?")]
+        public IEnumerator GetInDependencyOrder_SingleContext_ReturnsThatContext()
+        {
+            SceneContext ctx = GivenASceneContext("a");
+            yield return null;
+            _provider.Add(ctx);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(1, result.Count);
+            Assert.AreSame(ctx, result[0]);
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with a parent-child pair => child appears before parent?")]
+        public IEnumerator GetInDependencyOrder_ParentAndChild_ChildBeforeParent()
+        {
+            SceneContext parent = GivenASceneContext("parent");
+            SceneContext child = GivenASceneContextWithParent("child", "parent");
+            yield return null;
+            _provider.Add(parent);
+            _provider.Add(child);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(2, result.Count);
+            Assert.Less(IndexOf(result,child), IndexOf(result,parent));
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with two children of same parent => both children before parent?")]
+        public IEnumerator GetInDependencyOrder_TwoChildren_BothBeforeParent()
+        {
+            SceneContext parent = GivenASceneContext("parent");
+            SceneContext childA = GivenASceneContextWithParent("childA", "parent");
+            SceneContext childB = GivenASceneContextWithParent("childB", "parent");
+            yield return null;
+            _provider.Add(parent);
+            _provider.Add(childA);
+            _provider.Add(childB);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(3, result.Count);
+            Assert.Less(IndexOf(result,childA), IndexOf(result,parent));
+            Assert.Less(IndexOf(result,childB), IndexOf(result,parent));
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with a three-level chain (C->B->A) => returns [C, B, A]?")]
+        public IEnumerator GetInDependencyOrder_ThreeLevelChain_LeafFirst()
+        {
+            SceneContext a = GivenASceneContext("a");
+            SceneContext b = GivenASceneContextWithParent("b", "a");
+            SceneContext c = GivenASceneContextWithParent("c", "b");
+            yield return null;
+            _provider.Add(a);
+            _provider.Add(b);
+            _provider.Add(c);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(3, result.Count);
+            Assert.Less(IndexOf(result,c), IndexOf(result,b));
+            Assert.Less(IndexOf(result,b), IndexOf(result,a));
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder with two independent contexts => both are returned?")]
+        public IEnumerator GetInDependencyOrder_TwoIndependentContexts_BothReturned()
+        {
+            SceneContext x = GivenASceneContext("x");
+            SceneContext y = GivenASceneContext("y");
+            yield return null;
+            _provider.Add(x);
+            _provider.Add(y);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(2, result.Count);
+            Assert.Contains(x, (System.Collections.ICollection)result);
+            Assert.Contains(y, (System.Collections.ICollection)result);
+        }
+
+        [UnityTest]
+        [Description("GetInDependencyOrder does not mutate the provider's live state?")]
+        public IEnumerator GetInDependencyOrder_DoesNotMutateLiveState()
+        {
+            SceneContext parent = GivenASceneContext("parent");
+            SceneContext child = GivenASceneContextWithParent("child", "parent");
+            yield return null;
+            _provider.Add(parent);
+            _provider.Add(child);
+            _provider.GetInDependencyOrder();
+            // Removing child first (no active deps) must still work after the sort ran
+            Assert.DoesNotThrow(() => _provider.Remove(child));
+            Assert.DoesNotThrow(() => _provider.Remove(parent));
+        }
+
         // --- ValueSource data ---
 
         private static IEnumerable<string> NonEmptyIDs()
@@ -176,6 +276,13 @@ namespace Calluna.DI.Tests
         private SceneContext GivenASceneContext(string id)
         {
             return GivenASceneContextWithParent(id, string.Empty);
+        }
+
+        private static int IndexOf(IReadOnlyList<SceneContext> list, SceneContext item)
+        {
+            for (int i = 0; i < list.Count; i++)
+                if (ReferenceEquals(list[i], item)) return i;
+            return -1;
         }
 
         private SceneContext GivenASceneContextWithParent(string id, string parentId)

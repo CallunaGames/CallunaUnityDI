@@ -31,6 +31,14 @@ namespace Calluna.DI
 
         protected override void DoInjection() { }
 
+        protected override void OnApplicationQuit()
+        {
+            if (IsInitialized)
+                foreach (SceneContext sceneContext in _sceneContextProvider.GetInDependencyOrder())
+                    ((Context)sceneContext).Reset();
+            base.OnApplicationQuit();
+        }
+
         public Resolver GetResolverFor(SceneContext sceneContext)
         {
             string parentID = sceneContext.ParentContextID;
