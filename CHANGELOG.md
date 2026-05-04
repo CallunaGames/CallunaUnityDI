@@ -1,3 +1,8 @@
+## [1.4.2] - 2026-05-04
+
+### Fixed
+- Restored `nuget.moq` UPM dependency that was accidentally dropped in v1.4.0, causing `Moq.dll` to be unresolvable by the test assembly.
+
 ## [1.4.1] - 2026-04-25
 
 ### Added
