@@ -10,7 +10,8 @@
   "licensesUrl": "",
   "dependencies":
   {
-    "com.calluna.core": "1.4.0"
+    "com.calluna.core": "1.4.0",
+    "nuget.moq": "1.0.0"
   },
   "samples": [
     {
