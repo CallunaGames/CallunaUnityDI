@@ -223,6 +223,20 @@ namespace Calluna.DI.Tests
         }
 
         [UnityTest]
+        [Description("GetInDependencyOrder with a named parent and an anonymous child (empty ID) => child appears before parent?")]
+        public IEnumerator GetInDependencyOrder_AnonymousChildAndNamedParent_ChildBeforeParent()
+        {
+            SceneContext parent = GivenASceneContext("parent");
+            SceneContext anonymousChild = GivenASceneContextWithParent(string.Empty, "parent");
+            yield return null;
+            _provider.Add(parent);
+            _provider.Add(anonymousChild);
+            IReadOnlyList<SceneContext> result = _provider.GetInDependencyOrder();
+            Assert.AreEqual(2, result.Count);
+            Assert.Less(IndexOf(result, anonymousChild), IndexOf(result, parent));
+        }
+
+        [UnityTest]
         [Description("GetInDependencyOrder with two independent contexts => both are returned?")]
         public IEnumerator GetInDependencyOrder_TwoIndependentContexts_BothReturned()
         {

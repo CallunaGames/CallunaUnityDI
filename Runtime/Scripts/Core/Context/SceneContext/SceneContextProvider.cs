@@ -11,6 +11,7 @@ namespace Calluna.DI
         private const string getExceptionMessage = "The scene with iD {0} has not been added to the provider. Therefore getting it is not possible";
         private const string activeSceneDependenciesExceptionMessage = "The scene with iD {0} is parent to another scene. Unload dependant scenes before removing.";
 
+        private List<SceneContext> _allSceneContexts = new List<SceneContext>();
         private Dictionary<string, SceneContext> _sceneContexts = new Dictionary<string, SceneContext>();
         private Dictionary<string, int> _sceneToDependencyAmount = new Dictionary<string, int>();
 
@@ -25,20 +26,22 @@ namespace Calluna.DI
 
         public void Add(SceneContext context)
         {
+            _allSceneContexts.Add(context);
+            AddParentDependency(context);
             if (string.IsNullOrEmpty(context.ID))
                 return;
             ValidateAdd(context.ID);
             _sceneContexts[context.ID] = context;
-            AddParentDependency(context);
         }
 
 		public void Remove(SceneContext context)
         {
+            _allSceneContexts.Remove(context);
+            RemoveParentDependency(context);
             if (string.IsNullOrEmpty(context.ID))
                 return;
             ValidateRemove(context.ID);
             _sceneContexts.Remove(context.ID);
-            RemoveParentDependency(context);
         }
 
 		public SceneContext Get(string iD)
@@ -86,27 +89,32 @@ namespace Calluna.DI
 
         internal IReadOnlyList<SceneContext> GetInDependencyOrder()
         {
-            // Kahn's algorithm — children (no dependents) before parents
+            // Kahn's algorithm — children (no dependents) before parents.
+            // Uses _allSceneContexts so that scenes with empty IDs (leaf children)
+            // are included and their dependency on a named parent is respected.
             var counts = new Dictionary<string, int>(_sceneToDependencyAmount);
-            var snapshot = new Dictionary<string, SceneContext>(_sceneContexts);
+            var snapshot = new List<SceneContext>(_allSceneContexts);
             var sorted = new List<SceneContext>(snapshot.Count);
             var queue = new Queue<SceneContext>();
 
-            foreach (var kvp in snapshot)
-                if (!counts.TryGetValue(kvp.Key, out int c) || c == 0)
-                    queue.Enqueue(kvp.Value);
+            foreach (var ctx in snapshot)
+            {
+                string id = ctx.ID;
+                if (string.IsNullOrEmpty(id) || !counts.TryGetValue(id, out int c) || c == 0)
+                    queue.Enqueue(ctx);
+            }
 
             while (queue.Count > 0)
             {
                 var ctx = queue.Dequeue();
                 sorted.Add(ctx);
                 string parentID = ctx.ParentContextID;
-                if (!string.IsNullOrEmpty(parentID) && snapshot.ContainsKey(parentID))
+                if (!string.IsNullOrEmpty(parentID) && _sceneContexts.TryGetValue(parentID, out var parent))
                 {
                     counts.TryGetValue(parentID, out int pc);
                     counts[parentID] = pc - 1;
                     if (counts[parentID] <= 0)
-                        queue.Enqueue(snapshot[parentID]);
+                        queue.Enqueue(parent);
                 }
             }
 

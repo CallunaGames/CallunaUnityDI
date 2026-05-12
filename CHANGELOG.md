@@ -1,3 +1,8 @@
+## [1.4.3] - 2026-05-12
+
+### Fixed
+- `SceneContextProvider` now correctly tracks anonymous `SceneContext`s (those with an empty `ID` field) in the context registry and increments their parent's dependency count. Previously, anonymous child scenes were excluded from `GetInDependencyOrder()`, so named parent contexts could be torn down before their anonymous children during `Application.Quit`, triggering exceptions in `Cleanable` objects that still held references to the parent context.
+
 ## [1.4.2] - 2026-05-04
 
 ### Fixed

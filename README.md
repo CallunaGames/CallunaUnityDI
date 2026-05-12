@@ -44,7 +44,11 @@ Attach one `AppContext` to a GameObject in your first scene. It marks itself `Do
 
 Attach one `SceneContext` per scene. It finds or creates an `AppContext` on `Awake` and registers itself as the parent scope for any `GameObjectContext` in the scene.
 
-**Cross-scene dependencies** — set `Parent Context ID` on the child `SceneContext` to the `ID` of another `SceneContext` to resolve types from that scene.
+Every `SceneContext` — regardless of whether its `ID` field is set — is tracked in the framework's dependency graph and receives a deterministic teardown order (children before parents) when the application quits or scenes are unloaded.
+
+**Scene ID** — the `ID` field is only required when another scene needs to name this scene as its parent. Scenes whose `ID` is left empty are still tracked for teardown ordering; the ID-based lookup is only used for cross-scene parent resolution.
+
+**Cross-scene dependencies** — set `Parent Context ID` on the child `SceneContext` to the `ID` of the parent `SceneContext`. The child will use the parent scene's resolver as its own parent scope, making all of the parent's bindings available to the child scene. The parent scene must have a non-empty `ID` for this lookup to work.
 
 ### GameObjectContext
 `GameObjectContext : MonoContext`
@@ -58,7 +62,7 @@ All three context MonoBehaviours share this base class. The one public member of
 
 | Member | Description |
 |--------|-------------|
-| `bool IsInitialized` | `true` after `Init()` has completed. |
+| `bool IsInitialized` | `true` after the context has finished initialising (injection and `Initialize` callbacks complete). |
 
 ---
 
