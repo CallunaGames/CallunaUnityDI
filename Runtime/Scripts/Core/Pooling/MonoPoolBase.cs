@@ -1,4 +1,5 @@
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Calluna.DI
 {
@@ -9,7 +10,7 @@ namespace Calluna.DI
 		private GameObjectLifeCycleActionCaller<Cleanable> _gameObjectCleaner;
 		private GameObjectContextsReseter _reseter;
 		protected MonoPoolCache _cache;
-		private ObjectActivator _objectActivator;
+		protected ObjectActivator _objectActivator;
 
 		public virtual void Inject(Resolver resolver)
 		{
@@ -102,5 +103,18 @@ namespace Calluna.DI
 		}
 		
 		protected bool HasStoredItem() => _cache.HasObjects(_prefabHash);
+
+		// Instantiates bare prefab instances with no DI injection or initialisation.
+		// Items are stored directly in the cache and will be fully injected on first TakeItem.
+		// Avoids paying the DI init cost twice (warm-up + first take) compared to factory-based warm-up.
+		protected void WarmUpBare(int count)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				TItem instance = Object.Instantiate(_prefab);
+				_objectActivator.Disable(instance.gameObject);
+				_cache.Store(_prefabHash, instance);
+			}
+		}
 	}
 }

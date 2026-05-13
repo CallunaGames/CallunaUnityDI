@@ -12,8 +12,15 @@ namespace Calluna.DI
         
         protected override void DoInit(Resolver resolver)
 		{
-			_injector = resolver.Resolve<GameObjectInjector>();
-            _currentContext = CreateDIContext(resolver);
+			if (_currentContext == null)
+			{
+				_injector       = resolver.Resolve<GameObjectInjector>();
+				_currentContext = CreateDIContext(resolver);
+			}
+			else
+			{
+				_currentContext.Reinitialize(resolver);
+			}
 		}
 
 		private ChildDIContext CreateDIContext(Resolver resolver)

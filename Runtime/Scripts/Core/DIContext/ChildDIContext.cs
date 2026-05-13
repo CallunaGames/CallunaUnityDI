@@ -21,5 +21,11 @@ namespace Calluna.DI
 		{
 			_parent.TransferInstancesOf(_containers);
 		}
+
+		public void Reinitialize(Resolver parentResolver)
+		{
+			_resolver = parentResolver;
+			RebuildResolver();
+		}
     }
 }

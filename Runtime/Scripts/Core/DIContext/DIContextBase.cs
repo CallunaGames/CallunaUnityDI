@@ -67,6 +67,13 @@ namespace Calluna.DI
 
         public void PostInit() => _postInit = true;
 
+        protected void RebuildResolver()
+        {
+            _diContainerResolver = CreateResolver(_bindings);
+            _diContainerBinder   = new DIContainerBinder(_containers);
+            _diContainerBinder.Bind<DIContext>().ToInstance(this);
+        }
+
         public void ValidateBindings()
         {
             foreach (InstantiationInfo info in _bindings.GetInstantiationInfos())
