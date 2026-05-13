@@ -12,6 +12,7 @@ namespace Calluna.DI
 
         protected abstract DIContext DIContext { get; }
         public bool IsInitialized { get; private set; } = false;
+        private bool _bindingsValidated;
 
         protected Resolver _resolver => DIContext.Resolver;
         protected Binder _binder => DIContext.Binder;
@@ -23,11 +24,18 @@ namespace Calluna.DI
             IsInitialized = true;
             DoInit(baseResolver);
             InstallBindings();
-            DIContext.ValidateBindings();
+            ValidateBindingsOnce();
             DoInjection();
             DIContext.CreateNonLazyInstances();
             InitializeObjects();
             DIContext.PostInit();
+        }
+
+        private void ValidateBindingsOnce()
+        {
+            if (_bindingsValidated) return;
+            DIContext.ValidateBindings();
+            _bindingsValidated = true;
         }
 
         protected virtual void OnApplicationQuit()

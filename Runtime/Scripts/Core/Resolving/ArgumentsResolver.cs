@@ -19,6 +19,11 @@ namespace Calluna.DI
             _arguments.Add(CreateKey<TContract>(iD), argument);
         }
 
+        public void SetArgument<TContract>(TContract argument, IComparable iD = default)
+        {
+            _arguments[CreateKey<TContract>(iD)] = argument;
+        }
+
         public void AddArguments(Dictionary<BindingKey, object> arguments)
 		{
 			foreach (KeyValuePair<BindingKey, object> pair in arguments)
