@@ -1,3 +1,10 @@
+## [1.5.1] - 2026-05-14
+
+### Fixed
+- `MonoPoolInstaller<TItem>` and `MonoPoolInstaller<TItem, TArg>` no longer implement `Initializable`. The DI hierarchy traversal (`SceneObjectsLifeCycleActionCaller<Initializable>`) could call `Initialize()` on an installer before the context had called `Inject()`, causing a `NullReferenceException` on `_resolver`. The `WarmUp` call is now made at the end of `InstallBindings()`, where injection is guaranteed to have completed.
+
+---
+
 ## [1.5.0] - 2026-05-13
 
 ### Added

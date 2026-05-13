@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class MonoPoolInstaller<TItem> : MonoInstaller, Injectable, Initializable where TItem : Component
+    public class MonoPoolInstaller<TItem> : MonoInstaller, Injectable where TItem : Component
     {
         [SerializeField] private TItem _prefab;
         [SerializeField] private int _preWarmCount = 0;
@@ -24,16 +24,13 @@ namespace Calluna.DI
                 .ToNew<MonoPool<TItem>>()
                 .WithArgument(_prefab)
                 .AsSingle();
-        }
 
-        void Initializable.Initialize()
-        {
             if (_preWarmCount > 0)
                 _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
         }
     }
 
-    public class MonoPoolInstaller<TItem, TArgument> : MonoInstaller, Injectable, Initializable where TItem : Component
+    public class MonoPoolInstaller<TItem, TArgument> : MonoInstaller, Injectable where TItem : Component
     {
         [SerializeField] private TItem _prefab;
         [SerializeField] private int _preWarmCount = 0;
@@ -55,10 +52,7 @@ namespace Calluna.DI
                 .ToNew<MonoPool<TItem, TArgument>>()
                 .WithArgument(_prefab)
                 .AsSingle();
-        }
 
-        void Initializable.Initialize()
-        {
             if (_preWarmCount > 0)
                 _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
         }
