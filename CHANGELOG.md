@@ -1,3 +1,13 @@
+## [1.5.2] - 2026-05-14
+
+### Added
+- `MonoInstallerGroup` — a `MonoInstaller` that delegates to an ordered list of child `MonoInstaller`s. Each child is injected (if `Injectable`) before its `InstallBindings` is called, mirroring the sequencing guarantee that `MonoContext` provides for its own top-level installers. Useful when a context accumulates many installers: reference the group instead of listing every installer individually.
+
+### Fixed
+- `MonoPoolInstaller<TItem>` and `MonoPoolInstaller<TItem, TArg>` used inside a `MonoInstallerGroup` could throw `NullReferenceException` in `Initialize()` because the group did not inject sub-installers before calling their `InstallBindings`. `MonoInstallerGroup` now injects each child before forwarding the `InstallBindings` call. `MonoPoolInstaller` retains `Initializable` with `WarmUp` in `Initialize()`, which is the correct location: bindings are fully registered and the pool singleton is resolvable by the time `Initialize()` is invoked.
+
+---
+
 ## [1.5.1] - 2026-05-14
 
 ### Fixed

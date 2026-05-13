@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    public class MonoPoolInstaller<TItem> : MonoInstaller, Injectable where TItem : Component
+    public class MonoPoolInstaller<TItem> : MonoInstaller, Injectable, Initializable where TItem : Component
     {
         [SerializeField] private TItem _prefab;
         [SerializeField] private int _preWarmCount = 0;
@@ -10,6 +10,12 @@ namespace Calluna.DI
         private Resolver _resolver;
 
         void Injectable.Inject(Resolver resolver) => _resolver = resolver;
+
+        void Initializable.Initialize()
+        {
+            if (_preWarmCount > 0)
+                _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
+        }
 
         public override void InstallBindings(Binder binder)
         {
@@ -24,13 +30,10 @@ namespace Calluna.DI
                 .ToNew<MonoPool<TItem>>()
                 .WithArgument(_prefab)
                 .AsSingle();
-
-            if (_preWarmCount > 0)
-                _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
         }
     }
 
-    public class MonoPoolInstaller<TItem, TArgument> : MonoInstaller, Injectable where TItem : Component
+    public class MonoPoolInstaller<TItem, TArgument> : MonoInstaller, Injectable, Initializable where TItem : Component
     {
         [SerializeField] private TItem _prefab;
         [SerializeField] private int _preWarmCount = 0;
@@ -38,6 +41,12 @@ namespace Calluna.DI
         private Resolver _resolver;
 
         void Injectable.Inject(Resolver resolver) => _resolver = resolver;
+
+        void Initializable.Initialize()
+        {
+            if (_preWarmCount > 0)
+                _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
+        }
 
         public override void InstallBindings(Binder binder)
         {
@@ -52,9 +61,6 @@ namespace Calluna.DI
                 .ToNew<MonoPool<TItem, TArgument>>()
                 .WithArgument(_prefab)
                 .AsSingle();
-
-            if (_preWarmCount > 0)
-                _resolver.Resolve<WarmablePool<TItem>>().WarmUp(_preWarmCount);
         }
     }
 }
