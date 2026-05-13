@@ -1,3 +1,15 @@
+## [1.5.0] - 2026-05-13
+
+### Added
+- `WarmablePool<TItem>` interface exposes `void WarmUp(int count)`, implemented by both `MonoPool<TItem>` and `MonoPool<TItem, TArg>`. Callers that need explicit pre-warming can call `WarmUp` directly via this interface.
+- `MonoPoolInstaller<TItem>` and `MonoPoolInstaller<TItem, TArg>` gain a `_preWarmCount` serialized field. When set to a value greater than zero in the Inspector, the pool automatically calls `WarmUp(_preWarmCount)` during `Initialize()`, pre-instantiating that many items bare so the first `Request` for each avoids the full DI instantiation pipeline.
+- `ArgumentsResolver.SetArgument<TContract>(TContract argument, IComparable id = default)` — overwrites a single argument entry in an existing resolver in place, without allocating a new `ArgumentsResolver` instance.
+
+### Performance
+- `MonoPool<TItem, TArg>` caches a single `ArgumentsResolver` and mutates it via `SetArgument` on each `Request`, eliminating one heap allocation per pool take.
+- `MonoContext.ValidateBindings()` is now called at most once per `GameObjectContext` lifetime. Subsequent `Init()` calls on the same pooled object skip validation entirely.
+- `GameObjectContext` reuses its `ChildDIContext` across `Reset`/`Init` cycles. `ChildDIContext.Reinitialize(parentResolver)` rebuilds the resolver chain without re-allocating `DIContainers`.
+
 ## [1.4.3] - 2026-05-12
 
 ### Fixed
