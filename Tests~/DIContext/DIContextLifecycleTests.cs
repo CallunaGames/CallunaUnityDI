@@ -244,6 +244,26 @@ namespace Calluna.DI.Tests
             Assert.AreEqual(0, instance.InitializeCount);
         }
 
+        // The GameObject's other components and children belong to their own context and were injected
+        // already - e.g. pooled items below the AppContext object, which hosts the QuitDetector.
+        [Test]
+        public void Resolve_NewComponentOnExistingGameObject_InjectsOnlyTheNewComponent()
+        {
+            GameObject target = new GameObject("Target");
+            _created.Add(target);
+            ServiceConsumer existing = target.AddComponent<ServiceConsumer>();
+            GameObject child = new GameObject("Child");
+            child.transform.SetParent(target.transform);
+            ServiceConsumer existingChild = child.AddComponent<ServiceConsumer>();
+            _context.Binder.BindComponent<PoolItem>().FromNewComponentOn(target);
+
+            PoolItem added = _context.Resolver.Resolve<PoolItem>();
+
+            Assert.AreEqual(1, added.InjectCount);
+            Assert.AreEqual(0, existing.InjectCount);
+            Assert.AreEqual(0, existingChild.InjectCount);
+        }
+
         [Test]
         public void Resolve_ComponentOnNewGameObjectWithoutName_NamesTheObjectAfterTheType()
         {

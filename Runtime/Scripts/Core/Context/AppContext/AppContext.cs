@@ -12,6 +12,9 @@ namespace Calluna.DI
         protected override DIContext DIContext => _dIContext;
         private SceneContextProvider _sceneContextProvider;
         private bool _isQuitting;
+#pragma warning disable CS0618 // QuitDetector stays functional until it's removed in 2.0.0.
+        private QuitDetector _quitDetector;
+#pragma warning restore CS0618
 
         private void Awake()
         {
@@ -36,6 +39,10 @@ namespace Calluna.DI
             _dIContext = resolver.Resolve<BasicDIContext>();
             InstallAppContextBindings();
             _sceneContextProvider = _resolver.Resolve<SceneContextProvider>();
+            // Created right away, as before 1.6.0 - not lazily while quitting.
+#pragma warning disable CS0618
+            _quitDetector = _resolver.Resolve<QuitDetector>();
+#pragma warning restore CS0618
         }
 
         private void InstallAppContextBindings()
@@ -69,12 +76,11 @@ namespace Calluna.DI
             ((Context)this).Reset();
         }
 
-#pragma warning disable CS0618 // QuitDetector stays functional until it's removed in 2.0.0.
         private void NotifyQuitDetector()
         {
-            TryRun(this, () => _resolver.Resolve<QuitDetector>().NotifyQuit());
+            if (_quitDetector != null)
+                TryRun(this, _quitDetector.NotifyQuit);
         }
-#pragma warning restore CS0618
 
         private static void TryRun(MonoContext context, Action action)
         {

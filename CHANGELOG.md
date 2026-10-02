@@ -1,3 +1,9 @@
+## [1.6.0-pre.3] - 2026-10-02
+
+### Fixed
+- `FromNewComponentOn(gameObject)` injected the whole hierarchy of the GameObject instead of only the new component: its other components were injected again, and GameObjectContexts below it were initialized again with the binding's context. 1.6.0-pre.2 created the QuitDetector (a component on the AppContext object) only when quitting, which re-initialized pooled items stored below the AppContext object and threw a `MissingBindingException`.
+- The AppContext creates the QuitDetector on start again.
+
 ## [1.6.0-pre.2] - 2026-10-02
 
 ### Added

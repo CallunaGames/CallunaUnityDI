@@ -226,7 +226,11 @@ namespace Calluna.DI
         {
             if (!instantiationInfo.InjectionAllowed)
                 return;
-            if (instance is Component component)
+            // A component added to an existing GameObject: only it is new - its GameObject's other
+            // components and children were injected by their own context already.
+            if (instantiationInfo.CreationMode == InstanceCreationMode.FromNewComponentOn)
+                InjectIntoInstance(instance, instantiationInfo);
+            else if (instance is Component component)
                 InjectIntoTransform(component.transform, instantiationInfo);
             else if (instance is GameObject gameObject)
                 InjectIntoTransform(gameObject.transform, instantiationInfo);
