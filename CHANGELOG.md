@@ -1,40 +1,36 @@
-## [1.6.0-pre.3] - 2026-10-02
+## [1.6.0] - 2026-10-02
 
-### Fixed
-- `FromNewComponentOn(gameObject)` injected the whole hierarchy of the GameObject instead of only the new component: its other components were injected again, and GameObjectContexts below it were initialized again with the binding's context. 1.6.0-pre.2 created the QuitDetector (a component on the AppContext object) only when quitting, which re-initialized pooled items stored below the AppContext object and threw a `MissingBindingException`.
-- The AppContext creates the QuitDetector on start again.
+Requires `com.calluna.core` 1.7.0. Consolidates 1.6.0-pre.1 to pre.3, tested in the game (playing and quitting in the editor and a build).
 
-## [1.6.0-pre.2] - 2026-10-02
+**Upgrade notes**
+- `nuget.moq` is no longer a dependency. Projects that use Moq in their tests add it themselves (`"nuget.moq": "2.0.0"`).
+- `Cleanable` instances of a context are cleaned in reverse creation order now, and scene/GameObject contexts no longer reset themselves in `OnApplicationQuit` - see *Changed*.
+- `QuitDetector` is obsolete: implement `QuitHandler` instead.
 
 ### Added
 - `QuitHandler` with `HandleQuit()`: called once when the application quits, while every context is still intact - before any context is cleaned, disposed or destroyed. Use it e.g. to hand state to the persistence. Child contexts are handled before their parents; within a context, components in the order of `Cleanable` (parents first), then the context's instances in reverse creation order. Not called on a scene unload, a crash or a forced kill.
+- `PerRequest().Tracked()` / `PerRequest().Untracked()` decide whether the context keeps the instances of a per-request binding to clean, dispose and destroy them on reset. Untracked instances belong to the requester alone, so often requested ones no longer pile up in the context until it resets. Tracked stays the default; 2.0.0 will make it opt-in. `PerRequest()` now returns `PerRequestBindingContext` (a `LazyModeBindingContext`, so existing chains still compile). `Binding.TrackInstances`.
+- `MonoPoolCache.RemoveDestroyed(key)`: removes stored objects that were destroyed meanwhile; pools call it before each take.
+- Tests for pools, GameObjectContext, lifecycle order, factories, the context lifecycle and quitting with real scene contexts.
 
 ### Changed
-- A context cleans its `Cleanable` instances in reverse creation order. An instance is stored after its injection, so its dependencies were cleaned before it; now every instance is cleaned while its dependencies are still intact - like a GameObject hierarchy, and like `Dispose`. Components are still cleaned by the hierarchy traversal, parents first.
-- Quitting is handled by the AppContext alone, in two phases (all `QuitHandler`s, then the reset of every context), triggered by `Application.quitting` or its `OnApplicationQuit`, whichever comes first. Scene and GameObject contexts no longer reset themselves in `OnApplicationQuit` - Unity calls it in no reliable order, so a parent scene (e.g. Main) could be reset before its child (e.g. Game).
+- **Quitting is handled by the AppContext alone**, in two phases - all `QuitHandler`s, then the reset of every context, children first - triggered by `Application.quitting` or its `OnApplicationQuit`, whichever comes first. Scene and GameObject contexts no longer reset themselves in `OnApplicationQuit`: Unity calls it in no reliable order, so a parent scene (e.g. Main) could be reset before its child (e.g. Game). Removing a parent scene context while quitting no longer depends on the QuitDetector having noticed the quit first.
+- **A context cleans its `Cleanable` instances in reverse creation order.** An instance is stored after its injection, so its dependencies were cleaned before it; now every instance is cleaned while its dependencies are still intact - like a GameObject hierarchy, and like `Dispose`. Components are still cleaned by the hierarchy traversal, parents first.
+- `IDisposable`s are disposed in reverse creation order, and an exception in one `Dispose` is logged instead of stopping the reset - the remaining disposables, components and prefab instances are still cleaned up.
 - A scene context resets its GameObjectContexts (children first) before its own instances, instead of whenever Unity destroys their objects.
-- Removing a parent scene context while quitting no longer depends on the QuitDetector having noticed the quit first.
-
-### Deprecated
-- `QuitDetector` - implement `QuitHandler` instead. It stays functional (the AppContext flags it when quitting starts) and will be removed in 2.0.0.
-
-## [1.6.0-pre.1] - 2026-10-02
-
-### Added
-- `PerRequest().Tracked()` / `PerRequest().Untracked()` decide whether the context keeps the instances of a per-request binding to clean, dispose and destroy them on reset. Untracked instances belong to the requester alone, so often requested ones no longer pile up in the context until it resets. Tracked stays the default; 2.0.0 will make it opt-in. `PerRequest()` now returns `PerRequestBindingContext` (a `LazyModeBindingContext`, so existing chains still compile).
-- `Binding.TrackInstances`.
-
-### Changed
-- On reset, `IDisposable`s are disposed in reverse creation order, and an exception in one `Dispose` is logged instead of stopping the reset - the remaining disposables, components and prefab instances are still cleaned up.
 - A prefab instance resolved after `PostInit()` (`FromNewPrefabInstance`, `FromNewResourcePrefabInstance`) gets its whole hierarchy initialized, like `PrefabFactoryBase` does. Before, only the bound component was initialized.
 - Circular dependencies are detected per binding instead of per concrete type: two bindings of the same type (e.g. with different IDs) may depend on each other.
-- `package.json`: valid `unity` version (6000.0 / 33f1), depends on `com.calluna.core` 1.7.0, and no longer pulls `nuget.moq` into every project - the projects running the tests add it themselves.
+- `package.json`: valid `unity` version (6000.0 / 33f1), depends on `com.calluna.core` 1.7.0, no `nuget.moq` dependency.
+
+### Deprecated
+- `QuitDetector` - implement `QuitHandler` instead. It stays functional (the AppContext creates it on start and flags it when quitting starts) and will be removed in 2.0.0.
 
 ### Fixed
 - `MonoPool<TItem, TArg>` shared one argument resolver between all items: an item that kept its resolver resolved the argument of a later request. Each take gets its own resolver again.
+- `FromNewComponentOn(gameObject)` injected the whole hierarchy of the GameObject instead of only the new component: its other components were injected again, and GameObjectContexts below it were initialized again with the binding's context.
 - `AbstractMonoPoolInstaller<TItem, TComparable>` didn't inject its pool, so `Request` threw a `NullReferenceException`.
-- Resetting a context threw when a prefab instance or component it created was already destroyed (e.g. with its scene). Destroyed objects are skipped now.
-- Pools handed out stored items that were destroyed meanwhile. They call the new `MonoPoolCache.RemoveDestroyed(key)` before each take now.
+- Resetting a context threw when a prefab instance or component it created was already destroyed (e.g. with its scene); the rest of the reset was skipped. Destroyed objects are skipped now.
+- Pools handed out stored items that were destroyed meanwhile.
 - A prefab without the bound component threw no error - the resolve returned `null`. It throws a `MissingComponentException` now and destroys the instance.
 - When injecting or initializing a new prefab instance or component fails, the created object is destroyed instead of staying orphaned in the scene.
 - `FromNewComponentOnNewGameObject()` without a name named every object `TConcreteObject` instead of after the component type.
