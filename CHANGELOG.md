@@ -1,3 +1,8 @@
+## [1.6.1] - 2026-10-02
+
+### Changed
+- Internal: the places that call many objects in a row and log a failing one instead of stopping (cleaning, disposing, quitting, destroying, the hierarchy lifecycle calls) share one helper, `SafeInvoker`, instead of eight own try/catch blocks. No behaviour change; the hierarchy lifecycle calls don't allocate a delegate per component.
+
 ## [1.6.0] - 2026-10-02
 
 Requires `com.calluna.core` 1.7.0. Consolidates 1.6.0-pre.1 to pre.3, tested in the game (playing and quitting in the editor and a build).

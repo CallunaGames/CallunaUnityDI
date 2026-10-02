@@ -38,14 +38,7 @@ namespace Calluna.DI
                 // Already destroyed, e.g. together with its scene or parent.
                 if (gameObject == null)
                     continue;
-                try
-                {
-                    _reseter.Reset(gameObject);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e, gameObject);
-                }
+                SafeInvoker.Invoke(gameObject, _reseter.Reset, gameObject);
                 UnityEngine.Object.Destroy(gameObject);
             }
         }

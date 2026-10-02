@@ -17,19 +17,7 @@ namespace Calluna.DI
         public void Clean()
         {
             for (int i = _cleanables.Count - 1; i >= 0; i--)
-                TryClean(_cleanables[i]);
-        }
-
-        private void TryClean(Cleanable cleanable)
-        {
-            try
-            {
-                cleanable.Clean();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+                SafeInvoker.Invoke(_cleanables[i], cleanable => cleanable.Clean());
         }
 
         public void TryAdd(Cleanable cleanable)

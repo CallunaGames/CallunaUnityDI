@@ -32,19 +32,7 @@ namespace Calluna.DI
         public void HandleQuit()
         {
             for (int i = _quitHandlers.Count - 1; i >= 0; i--)
-                TryHandleQuit(_quitHandlers[i]);
-        }
-
-        private static void TryHandleQuit(QuitHandler quitHandler)
-        {
-            try
-            {
-                quitHandler.HandleQuit();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+                SafeInvoker.Invoke(_quitHandlers[i], quitHandler => quitHandler.HandleQuit());
         }
     }
 }

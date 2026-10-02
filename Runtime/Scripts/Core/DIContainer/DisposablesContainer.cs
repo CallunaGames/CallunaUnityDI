@@ -32,19 +32,7 @@ namespace Calluna.DI
 		internal void Dispose()
 		{
             for (int i = _disposables.Count - 1; i >= 0; i--)
-                TryDispose(_disposables[i]);
-        }
-
-        private static void TryDispose(IDisposable disposable)
-        {
-            try
-            {
-                disposable.Dispose();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+                SafeInvoker.Invoke(_disposables[i], disposable => disposable.Dispose());
         }
 	}
 }
