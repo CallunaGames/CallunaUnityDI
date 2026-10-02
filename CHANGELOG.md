@@ -1,3 +1,17 @@
+## [1.6.0-pre.2] - 2026-10-02
+
+### Added
+- `QuitHandler` with `HandleQuit()`: called once when the application quits, while every context is still intact - before any context is cleaned, disposed or destroyed. Use it e.g. to hand state to the persistence. Child contexts are handled before their parents; within a context, components in the order of `Cleanable` (parents first), then the context's instances in reverse creation order. Not called on a scene unload, a crash or a forced kill.
+
+### Changed
+- A context cleans its `Cleanable` instances in reverse creation order. An instance is stored after its injection, so its dependencies were cleaned before it; now every instance is cleaned while its dependencies are still intact - like a GameObject hierarchy, and like `Dispose`. Components are still cleaned by the hierarchy traversal, parents first.
+- Quitting is handled by the AppContext alone, in two phases (all `QuitHandler`s, then the reset of every context), triggered by `Application.quitting` or its `OnApplicationQuit`, whichever comes first. Scene and GameObject contexts no longer reset themselves in `OnApplicationQuit` - Unity calls it in no reliable order, so a parent scene (e.g. Main) could be reset before its child (e.g. Game).
+- A scene context resets its GameObjectContexts (children first) before its own instances, instead of whenever Unity destroys their objects.
+- Removing a parent scene context while quitting no longer depends on the QuitDetector having noticed the quit first.
+
+### Deprecated
+- `QuitDetector` - implement `QuitHandler` instead. It stays functional (the AppContext flags it when quitting starts) and will be removed in 2.0.0.
+
 ## [1.6.0-pre.1] - 2026-10-02
 
 ### Added

@@ -305,7 +305,24 @@ public class GameManager : MonoBehaviour, Injectable, Initializable
 
 Implement `Cleanable` to receive a callback when the context resets (e.g. on scene unload or application quit).
 
-On reset the context first cleans all `Cleanable`s, then disposes all `IDisposable`s in reverse creation order, then destroys the components and prefab instances it created. An exception in one of them is logged and doesn't stop the others. Objects that were already destroyed (e.g. with their scene) are skipped.
+### QuitHandler
+
+Implement `QuitHandler` to react when the application quits - while every context is still intact, before any context is cleaned. The AppContext calls `HandleQuit()` once, when quitting can no longer be cancelled (`Application.quitting` or `OnApplicationQuit`, whichever comes first, also when leaving play mode). Child contexts are handled before their parents; within a context, components parents first, then the context's instances in reverse creation order. It runs synchronously, and isn't called on a scene unload, a crash or a forced kill. Don't rely on the order of other `QuitHandler`s in the same context.
+
+```csharp
+public class GameSaver : Injectable, QuitHandler
+{
+    private GameDataPersistence _persistence;
+
+    public void Inject(Resolver resolver) => _persistence = resolver.Resolve<GameDataPersistence>();
+
+    public void HandleQuit() => _persistence.Save();
+}
+```
+
+After all `QuitHandler`s ran, the contexts are reset - children first.
+
+On reset the context first cleans all `Cleanable`s (components parents first, then the bound instances in reverse creation order, so an instance is cleaned before its dependencies), then disposes all `IDisposable`s in reverse creation order, then destroys the components and prefab instances it created. An exception in one of them is logged and doesn't stop the others. Objects that were already destroyed (e.g. with their scene) are skipped.
 
 ```csharp
 public class AnalyticsService : IDisposable, Injectable, Cleanable
@@ -668,6 +685,8 @@ See the *Event Bus* sample for a full scene example.
 ---
 
 ## Application Quit Detector
+
+> **Deprecated since 1.6.0** - implement `QuitHandler` instead (see *Object Lifecycle*). `QuitDetector` keeps working until it's removed in 2.0.0.
 
 `QuitDetector` is an abstract `MonoBehaviour` that fires a callback when the application quits, allowing cleanup code to be skipped or handled gracefully during teardown.
 

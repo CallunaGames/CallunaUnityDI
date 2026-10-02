@@ -3,6 +3,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+#pragma warning disable CS0618 // Tests the obsolete QuitDetector until it's removed in 2.0.0.
+
 namespace Calluna.DI.Tests
 {
     public class QuitDetectorTests

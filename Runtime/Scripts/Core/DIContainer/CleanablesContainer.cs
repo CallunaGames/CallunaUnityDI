@@ -8,14 +8,16 @@ namespace Calluna.DI
     internal class CleanablesContainer
     {
         public IEnumerable<Cleanable> Values => _cleanables;
-        private HashSet<Cleanable> _cleanables = new();
+        // Creation order. An instance is stored after its injection, so its dependencies come before it -
+        // Clean runs in reverse, so every instance is cleaned while its dependencies are still intact
+        // (like a GameObject hierarchy, and like Dispose).
+        private readonly List<Cleanable> _cleanables = new();
+        private readonly HashSet<Cleanable> _added = new();
 
         public void Clean()
         {
-            foreach (Cleanable cleanable in _cleanables)
-            {
-                TryClean(cleanable);
-            }
+            for (int i = _cleanables.Count - 1; i >= 0; i--)
+                TryClean(_cleanables[i]);
         }
 
         private void TryClean(Cleanable cleanable)
@@ -32,7 +34,8 @@ namespace Calluna.DI
 
         public void TryAdd(Cleanable cleanable)
         {
-            _cleanables.Add(cleanable);
+            if (_added.Add(cleanable))
+                _cleanables.Add(cleanable);
         }
 
         public void TryAdd(IEnumerable<Cleanable> cleanables)
@@ -46,6 +49,7 @@ namespace Calluna.DI
         public void Clear()
         {
             _cleanables.Clear();
+            _added.Clear();
         }
     }
 }

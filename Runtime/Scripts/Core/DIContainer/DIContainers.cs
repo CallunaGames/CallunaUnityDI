@@ -11,6 +11,7 @@ namespace Calluna.DI
         internal ObjectsContainer Objects { get; }
 		internal GameObjectsContainer GameObjectsContainer { get; }
 		internal CleanablesContainer CleanablesContainer { get; }
+		internal QuitHandlersContainer QuitHandlers { get; } = new QuitHandlersContainer();
 
 		public DIContainers(BindingsContainer bindings,
             SingleInstancesContainer singleInstances,
@@ -53,6 +54,7 @@ namespace Calluna.DI
 			Objects.Clear();
             GameObjectsContainer.Clear();
             CleanablesContainer.Clear();
+            QuitHandlers.Clear();
 		}
 	}
 }

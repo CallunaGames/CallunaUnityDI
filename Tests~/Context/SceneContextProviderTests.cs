@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Moq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -19,7 +18,6 @@ namespace Calluna.DI.Tests
     public class SceneContextProviderTests
     {
         private SceneContextProvider _provider;
-        private TestQuitDetector _quitDetector;
         private List<GameObject> _gameObjects;
 
         private static readonly FieldInfo s_idField =
@@ -33,14 +31,6 @@ namespace Calluna.DI.Tests
         {
             _gameObjects = new List<GameObject>();
             _provider = new SceneContextProvider();
-
-            GameObject quitGo = new GameObject("TestQuitDetector");
-            _gameObjects.Add(quitGo);
-            _quitDetector = quitGo.AddComponent<TestQuitDetector>();
-
-            Mock<Resolver> resolverMock = new Mock<Resolver>();
-            resolverMock.Setup(r => r.Resolve<QuitDetector>()).Returns(_quitDetector);
-            _provider.Inject(resolverMock.Object);
         }
 
         [TearDown]
@@ -137,7 +127,7 @@ namespace Calluna.DI.Tests
             yield return null;
             _provider.Add(parent);
             _provider.Add(child);
-            _quitDetector.SetQuitting();
+            _provider.IsQuitting = true;
             Assert.DoesNotThrow(() => _provider.Remove(parent));
         }
 

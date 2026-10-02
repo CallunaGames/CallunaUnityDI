@@ -60,6 +60,89 @@ namespace Calluna.DI.Tests
             CollectionAssert.AreEqual(new[] { "first" }, log);
         }
 
+        // --- Clean order ---
+
+        [Test]
+        public void Reset_CleansInReverseCreationOrder_DependentsBeforeTheirDependencies()
+        {
+            List<string> log = new List<string>();
+            _context.Binder.BindInstance(log);
+            _context.Binder.BindToNewSelf<CleanLogDependency>().AsSingle();
+            _context.Binder.BindToNewSelf<CleanLogDependent>().AsSingle();
+            _context.Resolver.Resolve<CleanLogDependent>();
+
+            Context.Reset();
+
+            CollectionAssert.AreEqual(new[] { nameof(CleanLogDependent), nameof(CleanLogDependency) }, log);
+        }
+
+        // --- Quit handlers ---
+
+        [Test]
+        public void HandleQuit_CallsQuitHandlersInReverseCreationOrder()
+        {
+            List<string> log = new List<string>();
+            BindLoggingQuitHandler("first", log);
+            BindLoggingQuitHandler("second", log);
+            _context.Resolver.Resolve<LoggingQuitHandler>("first");
+            _context.Resolver.Resolve<LoggingQuitHandler>("second");
+
+            Context.HandleQuit();
+
+            CollectionAssert.AreEqual(new[] { "second", "first" }, log);
+        }
+
+        [Test]
+        public void HandleQuit_HandlerThrows_CallsTheOthersAndLogsTheException()
+        {
+            List<string> log = new List<string>();
+            BindLoggingQuitHandler("first", log);
+            _context.Binder.BindToNewSelf<ThrowingQuitHandler>().AsSingle();
+            _context.Resolver.Resolve<LoggingQuitHandler>("first");
+            _context.Resolver.Resolve<ThrowingQuitHandler>();
+
+            LogAssert.Expect(LogType.Exception, new Regex(nameof(ThrowingQuitHandler)));
+            Context.HandleQuit();
+
+            CollectionAssert.AreEqual(new[] { "first" }, log);
+        }
+
+        [Test]
+        public void HandleQuit_DoesNotResetTheContext()
+        {
+            _context.Binder.BindToNewSelf<TrackedObject>().AsSingle();
+            TrackedObject instance = _context.Resolver.Resolve<TrackedObject>();
+
+            Context.HandleQuit();
+
+            Assert.IsTrue(instance.QuitHandled);
+            Assert.IsFalse(instance.Cleaned);
+            Assert.AreSame(instance, _context.Resolver.Resolve<TrackedObject>());
+        }
+
+        [Test]
+        public void HandleQuit_PerRequestUntracked_IsNotCalled()
+        {
+            _context.Binder.BindToNewSelf<TrackedObject>().PerRequest().Untracked();
+            TrackedObject instance = _context.Resolver.Resolve<TrackedObject>();
+
+            Context.HandleQuit();
+
+            Assert.IsFalse(instance.QuitHandled);
+        }
+
+        [Test]
+        public void HandleQuit_FromInstance_IsNotCalled()
+        {
+            TrackedObject instance = new TrackedObject();
+            _context.Binder.BindInstance(instance);
+            _context.Resolver.Resolve<TrackedObject>();
+
+            Context.HandleQuit();
+
+            Assert.IsFalse(instance.QuitHandled);
+        }
+
         // --- Per-request tracking ---
 
         [Test]
@@ -181,6 +264,15 @@ namespace Calluna.DI.Tests
                 .AsSingle();
         }
 
+        private void BindLoggingQuitHandler(string name, List<string> log)
+        {
+            _context.Binder.Bind<LoggingQuitHandler>(name)
+                .ToNew<LoggingQuitHandler>()
+                .WithArgument(log)
+                .WithArgument(name)
+                .AsSingle();
+        }
+
         private InitializableComponent CreateHierarchy()
         {
             GameObject root = new GameObject("Prefab");
@@ -210,8 +302,53 @@ namespace Calluna.DI.Tests
             public void Dispose() => throw new InvalidOperationException(nameof(ThrowingDisposable));
         }
 
-        private class TrackedObject : Injectable, Initializable, Cleanable, IDisposable
+        private class LoggingQuitHandler : QuitHandler, Injectable
         {
+            private List<string> _log;
+            private string _name;
+
+            public void Inject(Resolver resolver)
+            {
+                _log = resolver.Resolve<List<string>>();
+                _name = resolver.Resolve<string>();
+            }
+
+            public void HandleQuit() => _log.Add(_name);
+        }
+
+        private class CleanLogDependency : Injectable, Cleanable
+        {
+            private List<string> _log;
+
+            public void Inject(Resolver resolver) => _log = resolver.Resolve<List<string>>();
+
+            public void Clean() => _log.Add(nameof(CleanLogDependency));
+        }
+
+        // Resolved first, but stored after its dependency, which it creates during its injection.
+        private class CleanLogDependent : Injectable, Cleanable
+        {
+            private List<string> _log;
+
+            public void Inject(Resolver resolver)
+            {
+                _log = resolver.Resolve<List<string>>();
+                resolver.Resolve<CleanLogDependency>();
+            }
+
+            public void Clean() => _log.Add(nameof(CleanLogDependent));
+        }
+
+        private class ThrowingQuitHandler : QuitHandler
+        {
+            public void HandleQuit() => throw new InvalidOperationException(nameof(ThrowingQuitHandler));
+        }
+
+        private class TrackedObject : Injectable, Initializable, Cleanable, IDisposable, QuitHandler
+        {
+            public bool QuitHandled { get; private set; }
+            public void HandleQuit() => QuitHandled = true;
+
             public bool Injected { get; private set; }
             public bool Initialized { get; private set; }
             public bool Cleaned { get; private set; }

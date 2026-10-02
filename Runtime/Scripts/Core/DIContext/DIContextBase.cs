@@ -29,6 +29,7 @@ namespace Calluna.DI
         private ObjectsContainer _objects => _containers.Objects;
         private GameObjectsContainer _gameObjects => _containers.GameObjectsContainer;
         private CleanablesContainer _cleanables => _containers.CleanablesContainer;
+        private QuitHandlersContainer _quitHandlers => _containers.QuitHandlers;
 
         void Injectable.Inject(Resolver resolver)
         {
@@ -60,8 +61,14 @@ namespace Calluna.DI
             _containers.Clear();
         }
 
+        void DIContext.HandleQuit()
+        {
+            _quitHandlers.HandleQuit();
+        }
+
         void DIContext.TransferInstancesOf(DIContainers containers)
         {
+            _quitHandlers.Add(containers.QuitHandlers.Values);
             _cleanables.TryAdd(containers.CleanablesContainer.Values);
             _disposables.Add(containers.Disposables.Values);
             _objects.Add(containers.Objects.Values);
@@ -182,6 +189,9 @@ namespace Calluna.DI
             if (instance is IDisposable disposable)
                 _disposables.Add(disposable);
             TryAddCleanable(instance);
+            // Components are called by the hierarchy traversal of their context.
+            if (instance is QuitHandler quitHandler && instance is not Component)
+                _quitHandlers.Add(quitHandler);
             if (instance is Component component && !TryAddGameObject(component.gameObject, instantiationInfo))
                 _objects.Add(component);
         }
