@@ -6,6 +6,9 @@ namespace Calluna.DI
 {
     internal abstract class GameObjectLifeCycleActionCaller<TActionHolder>
     {
+        // Cached, so calling the action on every component doesn't allocate a delegate.
+        private Action<TActionHolder> _callAction;
+
         protected abstract bool Reverse { get; }
         
         public void PerformActionOnHierarchy(Transform transform)
@@ -28,14 +31,8 @@ namespace Calluna.DI
 
         private void PerformAction(TActionHolder actionHolder)
         {
-            try
-            {
-                CallAction(actionHolder);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e, actionHolder as Object);
-            }
+            _callAction ??= CallAction;
+            SafeInvoker.Invoke(actionHolder, _callAction, actionHolder as Object);
         }
 
         protected abstract void CallAction(TActionHolder actionHolder);

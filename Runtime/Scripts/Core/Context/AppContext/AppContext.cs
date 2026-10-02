@@ -68,32 +68,20 @@ namespace Calluna.DI
 
             IReadOnlyList<SceneContext> sceneContexts = _sceneContextProvider.GetInDependencyOrder();
             foreach (SceneContext sceneContext in sceneContexts)
-                TryRun(sceneContext, sceneContext.HandleQuit);
-            TryRun(this, HandleQuit);
+                if (sceneContext != null)
+                    SafeInvoker.Invoke(sceneContext, context => context.HandleQuit(), sceneContext);
+            SafeInvoker.Invoke(this, context => context.HandleQuit(), this);
 
             foreach (SceneContext sceneContext in sceneContexts)
-                TryRun(sceneContext, ((Context)sceneContext).Reset);
+                if (sceneContext != null)
+                    SafeInvoker.Invoke<Context>(sceneContext, context => context.Reset(), sceneContext);
             ((Context)this).Reset();
         }
 
         private void NotifyQuitDetector()
         {
             if (_quitDetector != null)
-                TryRun(this, _quitDetector.NotifyQuit);
-        }
-
-        private static void TryRun(MonoContext context, Action action)
-        {
-            if (context == null)
-                return;
-            try
-            {
-                action();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e, context);
-            }
+                SafeInvoker.Invoke(_quitDetector, detector => detector.NotifyQuit(), this);
         }
 
         public Resolver GetResolverFor(SceneContext sceneContext)

@@ -85,7 +85,8 @@ namespace Calluna.DI
             _sceneQuitHandler.PerformActionOnObjectsOf(_scene);
             // The components below a GameObjectContext were handled with the scene above.
             foreach (GameObjectContext context in GetGameObjectContextsChildrenFirst())
-                TryRun(context, () => context.HandleQuit());
+                if (IsActive(context))
+                    SafeInvoker.Invoke(context, c => c.HandleQuit(), context);
         }
 
         // The scene's GameObjectContexts are its children: reset them before the scene's own instances,
@@ -93,7 +94,8 @@ namespace Calluna.DI
         private void ResetGameObjectContexts()
         {
             foreach (GameObjectContext context in GetGameObjectContextsChildrenFirst())
-                TryRun(context, () => ((Context)context).Reset());
+                if (IsActive(context))
+                    SafeInvoker.Invoke<Context>(context, c => c.Reset(), context);
         }
 
         private List<GameObjectContext> GetGameObjectContextsChildrenFirst()
@@ -106,19 +108,7 @@ namespace Calluna.DI
             return result;
         }
 
-        private static void TryRun(GameObjectContext context, Action action)
-        {
-            if (context == null || !context.IsInitialized)
-                return;
-            try
-            {
-                action();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e, context);
-            }
-        }
+        private static bool IsActive(GameObjectContext context) => context != null && context.IsInitialized;
 
         protected override ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException()
         {

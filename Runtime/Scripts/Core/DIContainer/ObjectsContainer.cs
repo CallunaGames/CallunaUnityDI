@@ -30,16 +30,8 @@ namespace Calluna.DI
             foreach (UnityEngine.Object obj in _objects)
             {
                 // Already destroyed, e.g. together with its scene or parent.
-                if (obj == null)
-                    continue;
-                try
-                {
-                    UnityEngine.Object.Destroy(obj);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e, obj);
-                }
+                if (obj != null)
+                    SafeInvoker.Invoke(obj, UnityEngine.Object.Destroy, obj);
             }
         }
 	}
