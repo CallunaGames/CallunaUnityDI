@@ -26,6 +26,20 @@ namespace Calluna.DI
 			return _cache.TryGetValue(key, out Stack<GameObject> stack) && stack.Count > 0;
 		}
 
+		/// <summary>
+		/// Removes the objects stored under <paramref name="key"/> that were destroyed meanwhile and
+		/// would be taken next, so <see cref="HasObjects"/> and <see cref="Take{TComponent}"/> only see a
+		/// usable object. Only checks the top of the stash - deeper destroyed objects are removed once they
+		/// get there - so it stays cheap enough to call before every take.
+		/// </summary>
+		public void RemoveDestroyed(int key)
+		{
+			if (!_cache.TryGetValue(key, out Stack<GameObject> stack))
+				return;
+			while (stack.Count > 0 && stack.Peek() == null)
+				stack.Pop();
+		}
+
 		public void Store<TComponent>(int key, TComponent component) where TComponent : Component
 		{
 			Stack<GameObject> objects;
@@ -58,7 +72,8 @@ namespace Calluna.DI
 		{
 			foreach (KeyValuePair<int, Stack<GameObject>> entry in _cache)
 				foreach (GameObject obj in entry.Value)
-					Destroy(obj);
+					if (obj != null)
+						Destroy(obj);
 			_cache.Clear();
 		}
 

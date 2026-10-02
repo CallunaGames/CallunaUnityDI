@@ -21,7 +21,8 @@ namespace Calluna.DI
 
             binder.Bind<Pool<TItem, TComparable>>()
                 .And<Pool<TItem, TComparable, PrefabInstantiationArguments>>()
-                .ToInstance(pool);
+                .ToInstance(pool)
+                .WithInjection();
         }
     }
     

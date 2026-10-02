@@ -10,6 +10,12 @@ namespace Calluna.DI
         public InstanceAmountMode AmountMode { get; set; }
         public Func<object> ProvideInstanceFunction { get; set; }
         public bool InjectionAllowed { get; set; }
+        /// <summary>
+        /// Whether the context keeps the created instances to clean, dispose and destroy them on
+        /// reset. Always true for single instances; per-request instances opt out with
+        /// <see cref="PerRequestBindingContext.Untracked"/>.
+        /// </summary>
+        public bool TrackInstances { get; set; }
         public Dictionary<BindingKey, object> Arguments { get; } =
             new Dictionary<BindingKey, object>();
 
@@ -20,6 +26,7 @@ namespace Calluna.DI
             AmountMode = InstanceAmountMode.PerRequest;
             ProvideInstanceFunction = null;
             InjectionAllowed = true;
+            TrackInstances = true;
         }
 
 		public override string ToString()
@@ -29,7 +36,8 @@ namespace Calluna.DI
                 $"CreationMode: {CreationMode} | " +
                 $"CreateInstanceFunction: {ProvideInstanceFunction} | " +
                 $"AmountMode: {AmountMode} | " +
-                $"InjectionAllowed: {InjectionAllowed})" +
+                $"InjectionAllowed: {InjectionAllowed} | " +
+                $"TrackInstances: {TrackInstances})" +
                 $"Arguments: {Arguments}";
 		}
         
@@ -40,6 +48,7 @@ namespace Calluna.DI
                    AmountMode == other.AmountMode && 
                    Equals(ProvideInstanceFunction, other.ProvideInstanceFunction) && 
                    InjectionAllowed == other.InjectionAllowed && 
+                   TrackInstances == other.TrackInstances && 
                    Equals(Arguments, other.Arguments);
         }
 
@@ -60,6 +69,7 @@ namespace Calluna.DI
                 hashCode = (hashCode * 397) ^ (int)AmountMode;
                 hashCode = (hashCode * 397) ^ (ProvideInstanceFunction != null ? ProvideInstanceFunction.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ InjectionAllowed.GetHashCode();
+                hashCode = (hashCode * 397) ^ TrackInstances.GetHashCode();
                 hashCode = (hashCode * 397) ^ Arguments.GetHashCode();
                 return hashCode;
             }

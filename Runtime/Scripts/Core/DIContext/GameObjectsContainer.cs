@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Calluna.DI
@@ -34,7 +35,17 @@ namespace Calluna.DI
         {
             foreach (GameObject gameObject in _objects)
             {
-                _reseter.Reset(gameObject);
+                // Already destroyed, e.g. together with its scene or parent.
+                if (gameObject == null)
+                    continue;
+                try
+                {
+                    _reseter.Reset(gameObject);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e, gameObject);
+                }
                 UnityEngine.Object.Destroy(gameObject);
             }
         }

@@ -123,7 +123,33 @@ namespace Calluna.DI.Tests
             Assert.IsNotNull(result);
         }
 
+        // Two bindings of the same concrete type, one depending on the other, are no cycle.
+
+        [Test]
+        public void Resolve_SameTypeFromAnotherBinding_DoesNotThrow()
+        {
+            _context.Binder.Bind<ChainLink>("outer").ToNew<ChainLink>().WithArgument("inner").PerRequest();
+            _context.Binder.Bind<ChainLink>("inner").ToNew<ChainLink>().PerRequest();
+
+            ChainLink outer = _context.Resolver.Resolve<ChainLink>("outer");
+
+            Assert.IsNotNull(outer.Next);
+            Assert.IsNull(outer.Next.Next);
+        }
+
         // --- Test types ---
+
+        private class ChainLink : Injectable
+        {
+            public ChainLink Next { get; private set; }
+
+            public void Inject(Resolver resolver)
+            {
+                string next = resolver.ResolveOptional<string>();
+                if (next != null)
+                    Next = resolver.Resolve<ChainLink>(next);
+            }
+        }
 
         private class SelfDependent : Injectable
         {

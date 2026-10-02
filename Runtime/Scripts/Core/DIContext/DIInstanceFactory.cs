@@ -50,8 +50,14 @@ namespace  Calluna.DI
 
         private TInstance CreatePrefabInstance<TInstance>(GameObject prefab)
 		{
+            if (prefab == null)
+                throw new MissingComponentException($"Creation of {typeof(TInstance)} failed. The prefab is missing.");
             GameObject instance = GameObject.Instantiate(prefab);
-            return instance.GetComponent<TInstance>();
+            if (instance.TryGetComponent(out TInstance result))
+                return result;
+            GameObject.Destroy(instance);
+            throw new MissingComponentException(
+                $"Creation of {typeof(TInstance)} failed. The prefab {prefab.name} has no {typeof(TInstance)} component.");
         }
     }
 

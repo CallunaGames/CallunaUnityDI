@@ -131,6 +131,10 @@ Bind<TContract>(id?)
 |--------|-------------|
 | `AsSingle()` | One shared instance; created once and cached. |
 | `PerRequest()` | New instance every time the type is resolved. |
+| `PerRequest().Tracked()` | Same; the context keeps the instances and cleans, disposes or destroys them on reset (current default). |
+| `PerRequest().Untracked()` | Same; the instances belong to the requester alone - the context doesn't hold them. |
+
+A tracked per-request instance stays referenced by its context until the context resets, also when the requester no longer uses it. Mark bindings that are requested often (e.g. by pooled items) as `Untracked()` and clean or dispose their instances yourself. 2.0.0 will make tracking opt-in.
 
 ### Usage
 
@@ -300,6 +304,8 @@ public class GameManager : MonoBehaviour, Injectable, Initializable
 ### Cleanable
 
 Implement `Cleanable` to receive a callback when the context resets (e.g. on scene unload or application quit).
+
+On reset the context first cleans all `Cleanable`s, then disposes all `IDisposable`s in reverse creation order, then destroys the components and prefab instances it created. An exception in one of them is logged and doesn't stop the others. Objects that were already destroyed (e.g. with their scene) are skipped.
 
 ```csharp
 public class AnalyticsService : IDisposable, Injectable, Cleanable

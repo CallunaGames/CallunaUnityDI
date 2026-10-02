@@ -1,3 +1,24 @@
+## [1.6.0-pre.1] - 2026-10-02
+
+### Added
+- `PerRequest().Tracked()` / `PerRequest().Untracked()` decide whether the context keeps the instances of a per-request binding to clean, dispose and destroy them on reset. Untracked instances belong to the requester alone, so often requested ones no longer pile up in the context until it resets. Tracked stays the default; 2.0.0 will make it opt-in. `PerRequest()` now returns `PerRequestBindingContext` (a `LazyModeBindingContext`, so existing chains still compile).
+- `Binding.TrackInstances`.
+
+### Changed
+- On reset, `IDisposable`s are disposed in reverse creation order, and an exception in one `Dispose` is logged instead of stopping the reset - the remaining disposables, components and prefab instances are still cleaned up.
+- A prefab instance resolved after `PostInit()` (`FromNewPrefabInstance`, `FromNewResourcePrefabInstance`) gets its whole hierarchy initialized, like `PrefabFactoryBase` does. Before, only the bound component was initialized.
+- Circular dependencies are detected per binding instead of per concrete type: two bindings of the same type (e.g. with different IDs) may depend on each other.
+- `package.json`: valid `unity` version (6000.0 / 33f1), depends on `com.calluna.core` 1.7.0, and no longer pulls `nuget.moq` into every project - the projects running the tests add it themselves.
+
+### Fixed
+- `MonoPool<TItem, TArg>` shared one argument resolver between all items: an item that kept its resolver resolved the argument of a later request. Each take gets its own resolver again.
+- `AbstractMonoPoolInstaller<TItem, TComparable>` didn't inject its pool, so `Request` threw a `NullReferenceException`.
+- Resetting a context threw when a prefab instance or component it created was already destroyed (e.g. with its scene). Destroyed objects are skipped now.
+- Pools handed out stored items that were destroyed meanwhile. They call the new `MonoPoolCache.RemoveDestroyed(key)` before each take now.
+- A prefab without the bound component threw no error - the resolve returned `null`. It throws a `MissingComponentException` now and destroys the instance.
+- When injecting or initializing a new prefab instance or component fails, the created object is destroyed instead of staying orphaned in the scene.
+- `FromNewComponentOnNewGameObject()` without a name named every object `TConcreteObject` instead of after the component type.
+
 ## [1.5.2] - 2026-05-14
 
 ### Added

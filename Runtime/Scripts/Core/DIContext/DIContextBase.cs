@@ -10,7 +10,10 @@ namespace Calluna.DI
         private DIInstanceFactory _instanceFactory;
         private InstantiationInfoValidator _bindingValidator;
         private GameObjectInjector _gameObjectInjector;
-        private readonly List<Type> _creationChain = new List<Type>();
+        // The bindings being created, innermost last. Bindings rather than concrete types: two bindings
+        // of the same type (e.g. with different IDs) may depend on each other without a cycle.
+        private readonly List<Binding> _creationChain = new List<Binding>();
+        private readonly GameObjectInitializer _hierarchyInitializer = new GameObjectInitializer();
         private bool _postInit;
 
         private Resolver _diContainerResolver;
@@ -117,10 +120,10 @@ namespace Calluna.DI
         private TContract CreateInstance<TContract>(Binding binding)
         {
             Type concreteType = binding.ConcreteType;
-            if (_creationChain.Contains(concreteType))
-                throw new CircularDependencyException(new List<Type>(_creationChain) { concreteType });
+            if (IsBeingCreated(binding))
+                throw new CircularDependencyException(GetCreationChainTypes(concreteType));
 
-            _creationChain.Add(concreteType);
+            _creationChain.Add(binding);
             try
             {
                 TContract instance;
@@ -132,8 +135,16 @@ namespace Calluna.DI
                 {
                     throw new MissingBindingException(e, concreteType);
                 }
-                TryInjection(instance, binding);
-                TryInitialize(instance, binding);
+                try
+                {
+                    TryInjection(instance, binding);
+                    TryInitialize(instance, binding);
+                }
+                catch
+                {
+                    DestroyCreatedObject(instance, binding);
+                    throw;
+                }
                 StoreInstance(instance, binding);
                 return instance;
             }
@@ -143,9 +154,30 @@ namespace Calluna.DI
             }
         }
 
-        private void StoreInstance<TContract>(TContract instance, InstantiationInfo instantiationInfo)
+        // By reference: Binding.Equals compares values, and equal bindings are still different bindings.
+        private bool IsBeingCreated(Binding binding)
         {
+            foreach (Binding created in _creationChain)
+                if (ReferenceEquals(created, binding))
+                    return true;
+            return false;
+        }
+
+        private List<Type> GetCreationChainTypes(Type concreteType)
+        {
+            List<Type> result = new List<Type>(_creationChain.Count + 1);
+            foreach (Binding binding in _creationChain)
+                result.Add(binding.ConcreteType);
+            result.Add(concreteType);
+            return result;
+        }
+
+        private void StoreInstance<TContract>(TContract instance, Binding binding)
+        {
+            InstantiationInfo instantiationInfo = binding;
             if (instantiationInfo.CreationMode == InstanceCreationMode.FromInstance)
+                return;
+            if (binding.AmountMode == InstanceAmountMode.PerRequest && !binding.TrackInstances)
                 return;
             if (instance is IDisposable disposable)
                 _disposables.Add(disposable);
@@ -196,15 +228,44 @@ namespace Calluna.DI
         {
             if (instantiationInfo.CreationMode is InstanceCreationMode.FromInstance or InstanceCreationMode.FromFactory)
                 return;
-            if (instance is not Initializable initializable)
-                return;
-            // Components resolved before PostInit() is called are initialized by the
-            // hierarchy traversers (GameObjectInitializer / SceneObjectsLifeCycleActionCaller).
-            // After PostInit(), those traversers have already run, so we call Initialize() directly.
-            if (instance is Component && !_postInit)
-                return;
+            if (instance is Component component)
+            {
+                // Components resolved before PostInit() is called are initialized by the
+                // hierarchy traversers (GameObjectInitializer / SceneObjectsLifeCycleActionCaller).
+                // After PostInit(), those traversers have already run, so we initialize directly.
+                if (!_postInit)
+                    return;
+                // A new prefab instance brings its own hierarchy - initialize all of it, like PrefabFactoryBase.
+                if (IsPrefabInstance(instantiationInfo.CreationMode))
+                {
+                    _hierarchyInitializer.PerformActionOnHierarchy(component.transform);
+                    return;
+                }
+            }
+            if (instance is Initializable initializable)
+                initializable.Initialize();
+        }
 
-            initializable.Initialize();
+        private static bool IsPrefabInstance(InstanceCreationMode creationMode) =>
+            creationMode is InstanceCreationMode.FromPrefabInstance or InstanceCreationMode.FromResourcePrefabInstance;
+
+        // Injection or initialization failed: the instance is never handed out or stored, so remove the
+        // objects created for it instead of leaving them orphaned in the scene.
+        private static void DestroyCreatedObject<TContract>(TContract instance, InstantiationInfo instantiationInfo)
+        {
+            if (instance is not Component component || component == null)
+                return;
+            switch (instantiationInfo.CreationMode)
+            {
+                case InstanceCreationMode.FromPrefabInstance:
+                case InstanceCreationMode.FromResourcePrefabInstance:
+                case InstanceCreationMode.FromNewComponentOnNewGameObject:
+                    UnityEngine.Object.Destroy(component.gameObject);
+                    break;
+                case InstanceCreationMode.FromNewComponentOn:
+                    UnityEngine.Object.Destroy(component);
+                    break;
+            }
         }
 
         private void TryAddCleanable<TContract>(TContract contract)
