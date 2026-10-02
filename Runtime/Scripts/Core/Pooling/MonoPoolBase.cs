@@ -78,6 +78,9 @@ namespace Calluna.DI
 		}
 		
 		protected bool HasStoredItem(int prefabHash) => _cache.HasObjects(prefabHash);
+
+		// Stored items can be destroyed from outside; call before taking one.
+		protected void RemoveDestroyedItems(int prefabHash) => _cache.RemoveDestroyed(prefabHash);
 	}
     
     public abstract class MonoPoolBase<TItem> : MonoPoolBase where TItem : Component
@@ -103,6 +106,8 @@ namespace Calluna.DI
 		}
 		
 		protected bool HasStoredItem() => _cache.HasObjects(_prefabHash);
+
+		protected void RemoveDestroyedItems() => _cache.RemoveDestroyed(_prefabHash);
 
 		// Instantiates bare prefab instances with no DI injection or initialisation.
 		// Items are stored directly in the cache and will be fully injected on first TakeItem.

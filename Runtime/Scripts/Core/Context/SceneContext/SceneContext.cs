@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -21,6 +22,7 @@ namespace Calluna.DI
         private SceneContextProvider _sceneContextProvider;
         private SceneObjectsLifeCycleActionCaller<Cleanable> _sceneCleaner;
         private SceneObjectsLifeCycleActionCaller<Initializable> _sceneInitializer;
+        private SceneObjectsLifeCycleActionCaller<QuitHandler> _sceneQuitHandler;
 
         public string ID => _iD;
         public string ParentContextID => _parentContextID;
@@ -59,6 +61,7 @@ namespace Calluna.DI
             _sceneContextProvider = _resolver.Resolve<SceneContextProvider>();
             _sceneCleaner = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Cleanable>>();
             _sceneInitializer = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Initializable>>();
+            _sceneQuitHandler = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<QuitHandler>>();
         }
 
         protected override void DoInjection()
@@ -74,6 +77,47 @@ namespace Calluna.DI
         protected override void CleanObjects()
         {
             _sceneCleaner.PerformActionOnObjectsOf(_scene);
+            ResetGameObjectContexts();
+        }
+
+        protected override void HandleQuitOfObjects()
+        {
+            _sceneQuitHandler.PerformActionOnObjectsOf(_scene);
+            // The components below a GameObjectContext were handled with the scene above.
+            foreach (GameObjectContext context in GetGameObjectContextsChildrenFirst())
+                TryRun(context, () => context.HandleQuit());
+        }
+
+        // The scene's GameObjectContexts are its children: reset them before the scene's own instances,
+        // instead of whenever Unity destroys their objects.
+        private void ResetGameObjectContexts()
+        {
+            foreach (GameObjectContext context in GetGameObjectContextsChildrenFirst())
+                TryRun(context, () => ((Context)context).Reset());
+        }
+
+        private List<GameObjectContext> GetGameObjectContextsChildrenFirst()
+        {
+            List<GameObjectContext> result = new List<GameObjectContext>();
+            foreach (GameObject rootObject in _scene.GetRootGameObjects())
+                result.AddRange(rootObject.GetComponentsInChildren<GameObjectContext>(true));
+            // GetComponentsInChildren lists parents before their children.
+            result.Reverse();
+            return result;
+        }
+
+        private static void TryRun(GameObjectContext context, Action action)
+        {
+            if (context == null || !context.IsInitialized)
+                return;
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e, context);
+            }
         }
 
         protected override ContextAlreadyIsInitializedException CreateContextAlreadyIsInitializedException()

@@ -38,10 +38,8 @@ namespace Calluna.DI
             _bindingsValidated = true;
         }
 
-        protected virtual void OnApplicationQuit()
-        {
-            TryReset();
-        }
+        // No OnApplicationQuit here: Unity calls it on the contexts in no reliable order, so a parent
+        // could be reset before its children. The AppContext handles quitting for all contexts.
 
         protected virtual void OnDestroy()
         {
@@ -54,6 +52,22 @@ namespace Calluna.DI
         }
 
         public Resolver GetResolver() => _resolver;
+
+        /// <summary>
+        /// Calls <see cref="QuitHandler.HandleQuit"/> on the context's objects: first the components it
+        /// traverses, then its instances in reverse creation order.
+        /// </summary>
+        internal void HandleQuit()
+        {
+            if (!IsInitialized)
+                return;
+            HandleQuitOfObjects();
+            DIContext.HandleQuit();
+        }
+
+        protected virtual void HandleQuitOfObjects()
+        {
+        }
 
         protected abstract void DoInit(Resolver resolver);
         protected abstract void DoInjection();

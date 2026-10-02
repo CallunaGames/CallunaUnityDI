@@ -2,6 +2,8 @@
 using UnityEditor;
 #endif
 
+#pragma warning disable CS0618 // QuitDetector is obsolete; kept functional until 2.0.0.
+
 namespace Calluna.DI
 {
 	internal class EditorQuitDetector : QuitDetector

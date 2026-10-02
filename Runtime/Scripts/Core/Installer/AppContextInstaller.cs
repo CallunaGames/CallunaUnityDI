@@ -54,6 +54,11 @@ namespace Calluna.DI
             binder.BindToNewSelf<SceneObjectsLifeCycleActionCaller<Cleanable>>();
             
             binder.BindToNewSelf<SceneObjectsLifeCycleActionCaller<Initializable>>();
+
+            binder.Bind<GameObjectLifeCycleActionCaller<QuitHandler>>()
+                .ToNew<GameObjectQuitHandlerCaller>();
+
+            binder.BindToNewSelf<SceneObjectsLifeCycleActionCaller<QuitHandler>>();
             
             binder.Bind<ObjectActivator>()
                 .ToNew<BasicObjectActivator>();

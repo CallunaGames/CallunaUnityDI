@@ -23,6 +23,7 @@ namespace Calluna.DI
                                             $"Please make sure to add it to the factory before calling {nameof(Request)}");
             }
             
+            RemoveDestroyedItems(_idToPrefabHash[id]);
             return !HasStoredItem(prefab.GetHashCode())
                 ? _prefabFactory.Create(prefab, instantiationArguments)
                 : TakeItem<TItem>(_resolver, _idToPrefabHash[id], instantiationArguments);
@@ -51,6 +52,7 @@ namespace Calluna.DI
                                             $"Please make sure to add it to the factory before calling {nameof(Request)}");
             }
             
+            RemoveDestroyedItems(_idToPrefabHash[id]);
             return !HasStoredItem(prefab.GetHashCode())
                 ? _prefabFactory.Create(prefab, argument, instantiationArguments)
                 : TakeItem<TItem>(CreateResolver(argument), _idToPrefabHash[id], instantiationArguments);

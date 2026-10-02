@@ -12,10 +12,10 @@ namespace Calluna.DI
             return new LazyModeBindingContext(_arguments);
         }
 
-        public LazyModeBindingContext PerRequest()
+        public PerRequestBindingContext PerRequest()
         {
             _arguments.Binding.AmountMode = InstanceAmountMode.PerRequest;
-            return new LazyModeBindingContext(_arguments);
+            return new PerRequestBindingContext(_arguments);
         }
     }
 }

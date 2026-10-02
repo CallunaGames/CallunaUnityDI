@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Calluna.DI
 {
-    internal class SceneContextProvider: Injectable
+    internal class SceneContextProvider
     {
         private const string alreadyAddedExceptionMessage = "The scene with iD {0} has already been added to the provider.";
         private const string notAddedExceptionMessage = "The scene with iD {0} has not been added to the provider. Therefore removing it is not possible";
@@ -15,14 +15,11 @@ namespace Calluna.DI
         private Dictionary<string, SceneContext> _sceneContexts = new Dictionary<string, SceneContext>();
         private Dictionary<string, int> _sceneToDependencyAmount = new Dictionary<string, int>();
 
-        private QuitDetector _quitDetector;
-
-        private bool IsAppQuitting => _quitDetector.IsQuitting;
-
-        public void Inject(Resolver resolver)
-        {
-            _quitDetector = resolver.Resolve<QuitDetector>();
-        }
+        /// <summary>
+        /// Set by the AppContext when the application quits: it resets the scene contexts in dependency
+        /// order, and a parent may be removed while a child is still registered then.
+        /// </summary>
+        internal bool IsQuitting { get; set; }
 
         public void Add(SceneContext context)
         {
@@ -77,7 +74,7 @@ namespace Calluna.DI
         {
             if (!_sceneContexts.ContainsKey(iD))
                 throw new NotAddedException(iD);
-            if (!IsAppQuitting && IsDependantSceneContext(iD))
+            if (!IsQuitting && IsDependantSceneContext(iD))
                 throw new ActiveSceneDependenciesException(iD);
         }
 

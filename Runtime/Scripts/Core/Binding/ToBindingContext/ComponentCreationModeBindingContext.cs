@@ -40,7 +40,7 @@ namespace Calluna.DI
 		public AllowInjectionBindingContext FromNewComponentOnNewGameObject(
 			string name = "", Transform parent = null, bool worldPositionStays = false)
 		{
-			name = string.IsNullOrEmpty(name) ? $"{nameof(TConcrete)}Object" : name;
+			name = string.IsNullOrEmpty(name) ? $"{typeof(TConcrete).Name}Object" : name;
 			_binding.CreationMode = InstanceCreationMode.FromNewComponentOnNewGameObject;
 			_binding.ProvideInstanceFunction = () =>
 			{

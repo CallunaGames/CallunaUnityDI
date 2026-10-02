@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using UnityEngine;
 
+#pragma warning disable CS0618 // Tests the obsolete QuitDetector until it's removed in 2.0.0.
+
 namespace Calluna.DI.Tests
 {
     internal class QuitDetectorInstallerTests : InstallerTests<QuitDetectorInstaller>
