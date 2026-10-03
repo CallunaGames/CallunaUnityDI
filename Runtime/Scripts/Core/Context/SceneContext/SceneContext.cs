@@ -23,6 +23,7 @@ namespace Calluna.DI
         private SceneObjectsLifeCycleActionCaller<Cleanable> _sceneCleaner;
         private SceneObjectsLifeCycleActionCaller<Initializable> _sceneInitializer;
         private SceneObjectsLifeCycleActionCaller<QuitHandler> _sceneQuitHandler;
+        private MonoPoolCache _poolCache;
 
         public string ID => _iD;
         public string ParentContextID => _parentContextID;
@@ -62,6 +63,7 @@ namespace Calluna.DI
             _sceneCleaner = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Cleanable>>();
             _sceneInitializer = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<Initializable>>();
             _sceneQuitHandler = _resolver.Resolve<SceneObjectsLifeCycleActionCaller<QuitHandler>>();
+            _poolCache = _resolver.Resolve<MonoPoolCache>();
         }
 
         protected override void DoInjection()
@@ -119,6 +121,10 @@ namespace Calluna.DI
         {
             _sceneContextProvider.Remove(this);
             base.DoReset();
+            // The scene's pools (also those of its GameObjectContexts) are disposed now - their stored
+            // items go, unless a pool of another context still uses the same prefab.
+            if (_poolCache != null)
+                _poolCache.DestroyUnused();
         }
     }
 }

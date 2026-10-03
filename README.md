@@ -605,6 +605,10 @@ EnemyView enemy = pool.Request(EnemyType.Ranged, enemyData);
 pool.Return(enemy);
 ```
 
+### Stored items and their lifetime
+
+Returned items are stored in the `MonoPoolCache` below the AppContext, shared by prefab - two pools of the same prefab take from the same stash. A pool registers as a user of its prefabs and unregisters when it's disposed together with its context. When a scene context resets (e.g. its scene is unloaded), the stored items that no live pool uses anymore are destroyed. GameObjectContexts don't clean up, so a pooled object with its own context - reset on every return, with new pools on the next take - keeps reusing the stored items of its inner pools.
+
 See the *Pooling* sample for a complete scene example.
 
 ---

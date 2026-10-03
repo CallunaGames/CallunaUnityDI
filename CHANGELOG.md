@@ -1,3 +1,12 @@
+## [1.7.0-pre.1] - 2026-10-03
+
+### Added
+- **Stored pool items are destroyed once no pool uses them anymore.** The `MonoPoolCache` (in the AppContext) stores returned items shared by prefab. Pools now register there as users of their prefabs and unregister when they're disposed with their context; a scene context's reset destroys the stored items no live pool uses - e.g. those of an unloaded scene, which stayed below the AppContext until the same prefab was requested again. GameObjectContexts don't clean up: a pooled object's context is reset on every return and its pools are recreated on the next take, reusing the stored items. Items of a prefab that a pool of another context still uses are kept.
+- `MonoPoolBase` implements `IDisposable` (`Dispose()` unregisters the pool) and has `UseCacheKey(int)` for own pools.
+
+### Fixed
+- `AbstractMonoPoolInstaller` bound its pool with `ToInstance`, so the context never disposed it (and the variant without argument didn't inject it before 1.6.0). It binds it with `FromMethod` as a single instance now.
+
 ## [1.6.1] - 2026-10-02
 
 ### Changed

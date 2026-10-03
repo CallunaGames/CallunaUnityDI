@@ -1,9 +1,17 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Calluna.DI
 {
-    public abstract class MonoPoolBase : Injectable
+    /// <summary>
+    /// Base of the MonoBehaviour pools. Stored items live in the shared <see cref="MonoPoolCache"/>; a pool
+    /// registers there as a user of its prefabs and unregisters when it's disposed - with its context, as
+    /// pools are bound as single instances. A scene context's reset then destroys the stored items no
+    /// live pool uses anymore.
+    /// </summary>
+    public abstract class MonoPoolBase : Injectable, IDisposable
 	{
 		private GameObjectInjector _injector;
 		private GameObjectLifeCycleActionCaller<Initializable> _gameObjectInitializer;
@@ -11,6 +19,7 @@ namespace Calluna.DI
 		private GameObjectContextsReseter _reseter;
 		protected MonoPoolCache _cache;
 		protected ObjectActivator _objectActivator;
+		private readonly List<int> _cacheKeys = new List<int>();
 
 		public virtual void Inject(Resolver resolver)
 		{
@@ -79,6 +88,27 @@ namespace Calluna.DI
 		
 		protected bool HasStoredItem(int prefabHash) => _cache.HasObjects(prefabHash);
 
+		/// <summary>Registers the pool as a user of <paramref name="prefabHash"/>'s stored items, once.</summary>
+		protected void UseCacheKey(int prefabHash)
+		{
+			if (_cacheKeys.Contains(prefabHash))
+				return;
+			_cacheKeys.Add(prefabHash);
+			_cache.AddUser(prefabHash);
+		}
+
+		/// <summary>
+		/// Unregisters the pool from its stored items. Called by its context's reset; the items stay stored
+		/// until a scene context destroys the unused ones.
+		/// </summary>
+		public virtual void Dispose()
+		{
+			if (_cache != null)
+				foreach (int key in _cacheKeys)
+					_cache.RemoveUser(key);
+			_cacheKeys.Clear();
+		}
+
 		// Stored items can be destroyed from outside; call before taking one.
 		protected void RemoveDestroyedItems(int prefabHash) => _cache.RemoveDestroyed(prefabHash);
 	}
@@ -93,6 +123,7 @@ namespace Calluna.DI
 			base.Inject(resolver);
 			_prefab = resolver.Resolve<TItem>();
 			_prefabHash = _prefab.GetHashCode();
+			UseCacheKey(_prefabHash);
 		}
 
 		protected TItem TakeItem(Resolver resolver, PrefabInstantiationArguments instantiationArguments)
