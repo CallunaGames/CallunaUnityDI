@@ -21,8 +21,9 @@ namespace Calluna.DI
 
             binder.Bind<Pool<TItem, TComparable>>()
                 .And<Pool<TItem, TComparable, PrefabInstantiationArguments>>()
-                .ToInstance(pool)
-                .WithInjection();
+                .To<AbstractMonoPool<TItem, TComparable>>()
+                .FromMethod(() => pool)
+                .AsSingle();
         }
     }
     
@@ -44,8 +45,9 @@ namespace Calluna.DI
 
             binder.Bind<Pool<TItem, TComparable, TArg>>()
                 .And<Pool<TItem, TComparable, TArg, PrefabInstantiationArguments>>()
-                .ToInstance(pool)
-                .WithInjection();
+                .To<AbstractMonoPool<TItem, TComparable, TArg>>()
+                .FromMethod(() => pool)
+                .AsSingle();
         }
     }
 }

@@ -27,6 +27,8 @@ namespace Calluna.DI
             return binding;
         }
 
+        public IEnumerable<KeyValuePair<BindingKey, Binding>> Entries => _bindings;
+
         public IEnumerable<InstantiationInfo> GetInstantiationInfos()
         {
             return _bindings.Values;

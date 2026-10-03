@@ -19,6 +19,8 @@ namespace Calluna.DI
             base.Inject(resolver);
             _prefabFactory = resolver.Resolve<PrefabFactory>();
             _resolver = resolver;
+            foreach (int prefabHash in _idToPrefabHash.Values)
+                UseCacheKey(prefabHash);
         }
 
         public void AddPrefab(TItem prefab)
@@ -32,6 +34,8 @@ namespace Calluna.DI
             
             _idToPrefab.Add(prefab.ItemId, prefab);
             _idToPrefabHash.Add(prefab.ItemId, prefab.GetHashCode());
+            if (_cache != null)
+                UseCacheKey(prefab.GetHashCode());
         }
         
         public void Return(TItem item)

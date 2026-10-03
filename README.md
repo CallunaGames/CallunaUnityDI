@@ -605,6 +605,10 @@ EnemyView enemy = pool.Request(EnemyType.Ranged, enemyData);
 pool.Return(enemy);
 ```
 
+### Stored items and their lifetime
+
+Returned items are stored in the `MonoPoolCache` below the AppContext, shared by prefab - two pools of the same prefab take from the same stash. A pool registers as a user of its prefabs and unregisters when it's disposed together with its context. When a scene context resets (e.g. its scene is unloaded), the stored items that no live pool uses anymore are destroyed. GameObjectContexts don't clean up, so a pooled object with its own context - reset on every return, with new pools on the next take - keeps reusing the stored items of its inner pools.
+
 See the *Pooling* sample for a complete scene example.
 
 ---
@@ -681,6 +685,22 @@ public class GoldService : Injectable, Initializable, Cleanable
 Always unsubscribe in `Cleanable.Clean()` — failing to do so prevents the subscriber from being garbage-collected for the lifetime of the bus.
 
 See the *Event Bus* sample for a full scene example.
+
+---
+
+## Dependency Graph
+
+`DependencyRecorder` records the dependency graph while the game runs: which type resolved which contract from which context, plus every context's bindings - aggregated by type, so pooled objects don't multiply it.
+
+1. Open *Window > Calluna > DI Dependency Graph* and turn on **Record on Play**.
+2. Enter play mode and play the parts of the game you're interested in.
+3. Browse the tabs - **Contexts** (bindings with their modes and who used them; click a binding), **Requesters** (what each type resolved) and **Unused bindings** (never resolved or created while recording) - or **Export** the graph as Mermaid or DOT. The search text filters the views and the export.
+
+Each binding is one node with all its contracts (`A | B` for `Bind<A>().And<B>()`). **Hide DI internals** (on by default) leaves out the DI's own plumbing in the views and the export.
+
+Requesters are the types being injected or created, components in their `Initialize` / `Clean` / `HandleQuit`, installers, and scoped factories creating their product. Resolves through a resolver kept for later appear as `(outside injection)`, eagerly created instances as `(non-lazy)`. A requester that is the concrete type of exactly one binding is drawn as that binding in the export.
+
+In builds, define `CALLUNA_DI_RECORDER`: the recorder starts automatically, and `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)` write the graph. Without the define, recording is compiled out to constant `false` checks.
 
 ---
 

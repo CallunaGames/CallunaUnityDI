@@ -13,7 +13,20 @@ namespace Calluna.DI
 		{
 			TResult instance = new TResult();
 			if (instance is Injectable injectable)
-				injectable.Inject(resolver);
+			{
+				bool recording = DependencyRecorder.IsRecording;
+				if (recording)
+					DependencyRecorder.PushRequester(typeof(TResult));
+				try
+				{
+					injectable.Inject(resolver);
+				}
+				finally
+				{
+					if (recording)
+						DependencyRecorder.PopRequester();
+				}
+			}
 			if (instance is Initializable initializable)
 				initializable.Initialize();
 			return instance;

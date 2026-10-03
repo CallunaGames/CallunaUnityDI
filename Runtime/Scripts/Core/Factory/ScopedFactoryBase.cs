@@ -9,22 +9,28 @@
             _parentResolver = resolver;
         }
 
-        private static ChildDIContext CreateDIContext(Resolver resolver)
+        private ChildDIContext CreateDIContext(Resolver resolver)
         {
             Factory<ChildDIContext, Resolver> contextFactory = resolver.Resolve<Factory<ChildDIContext, Resolver>>();
-            return contextFactory.Create(resolver);
+            ChildDIContext context = contextFactory.Create(resolver);
+            ((DIContext)context).Name = $"Scope {TypeNames.Get(GetType())}";
+            return context;
         }
 
         protected T DoCreation()
         {
-            return DoCreation(CreateDIContext(_parentResolver));
+            using (DependencyRecorder.Requester(GetType()))
+                return DoCreation(CreateDIContext(_parentResolver));
         }
 
         protected T DoCreation<TArgument>(TArgument argument)
         {
-            ChildDIContext childContext = CreateDIContext(_parentResolver);
-            childContext.Binder.BindInstance(argument);
-            return DoCreation(childContext);
+            using (DependencyRecorder.Requester(GetType()))
+            {
+                ChildDIContext childContext = CreateDIContext(_parentResolver);
+                childContext.Binder.BindInstance(argument);
+                return DoCreation(childContext);
+            }
         }
 
         private T DoCreation(ChildDIContext childContext)
@@ -32,6 +38,7 @@
             try
             {
                 InitScope(childContext.Resolver, childContext.Binder);
+                ((DIContext)childContext).RecordBindings();
                 childContext.ValidateBindings();
                 T result = childContext.Resolver.Resolve<T>();
                 childContext.MoveInstancesToParent();

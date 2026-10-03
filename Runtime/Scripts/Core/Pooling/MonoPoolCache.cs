@@ -9,6 +9,9 @@ namespace Calluna.DI
 		private Transform _hook;
 		private RectTransform _uiHook;
 		private Dictionary<int, Stack<GameObject>> _cache = new Dictionary<int, Stack<GameObject>>();
+		// Live pools per key. The stash is shared by prefab, so only the cache knows whether any pool
+		// may still take an object of a key.
+		private readonly Dictionary<int, int> _users = new Dictionary<int, int>();
 
 		private void Awake()
 		{
@@ -38,6 +41,46 @@ namespace Calluna.DI
 				return;
 			while (stack.Count > 0 && stack.Peek() == null)
 				stack.Pop();
+		}
+
+		/// <summary>A pool that takes and stores objects under <paramref name="key"/> came alive.</summary>
+		internal void AddUser(int key)
+		{
+			_users.TryGetValue(key, out int count);
+			_users[key] = count + 1;
+		}
+
+		/// <summary>A pool of <paramref name="key"/> was disposed (its context was reset).</summary>
+		internal void RemoveUser(int key)
+		{
+			if (!_users.TryGetValue(key, out int count))
+				return;
+			if (count > 1)
+				_users[key] = count - 1;
+			else
+				_users.Remove(key);
+		}
+
+		/// <summary>
+		/// Destroys the stored objects no live pool uses anymore - e.g. those of a scene that was unloaded.
+		/// Called by a scene context after its reset; not by GameObjectContexts, whose pools are disposed
+		/// on every return of the pooled object and recreated on its next take, reusing the stored objects.
+		/// </summary>
+		internal void DestroyUnused()
+		{
+			List<int> unused = null;
+			foreach (int key in _cache.Keys)
+				if (!_users.ContainsKey(key))
+					(unused ??= new List<int>()).Add(key);
+			if (unused == null)
+				return;
+			foreach (int key in unused)
+			{
+				foreach (GameObject obj in _cache[key])
+					if (obj != null)
+						Destroy(obj);
+				_cache.Remove(key);
+			}
 		}
 
 		public void Store<TComponent>(int key, TComponent component) where TComponent : Component

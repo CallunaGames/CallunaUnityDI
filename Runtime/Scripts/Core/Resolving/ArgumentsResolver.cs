@@ -32,9 +32,11 @@ namespace Calluna.DI
 
 		protected override TContract DoResolve<TContract>(BindingKey key)
 		{
-			return _arguments.TryGetValue(key, out object value)
-				? (TContract)value
-				: _baseResolver.Resolve<TContract>(key);
+			if (!_arguments.TryGetValue(key, out object value))
+				return _baseResolver.Resolve<TContract>(key);
+			if (DependencyRecorder.IsRecording)
+				DependencyRecorder.RecordArgument(key);
+			return (TContract)value;
 		}
 
 		public override bool IsResolvable(BindingKey key)

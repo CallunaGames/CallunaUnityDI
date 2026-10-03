@@ -30,7 +30,11 @@ namespace Calluna.DI
 
 		public TContract ResolveOptional<TContract>(BindingKey bindingKey)
 		{
-			return IsResolvable(bindingKey) ? DoResolve<TContract>(bindingKey) : default;
+			if (IsResolvable(bindingKey))
+				return DoResolve<TContract>(bindingKey);
+			if (DependencyRecorder.IsRecording)
+				DependencyRecorder.RecordMissingOptional(bindingKey);
+			return default;
 		}
 
 		public abstract bool IsResolvable(BindingKey key);

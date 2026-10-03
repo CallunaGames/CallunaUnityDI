@@ -1,0 +1,301 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace Calluna.DI.Tests
+{
+    public class DependencyRecorderTests
+    {
+        private const string ContextName = "Test";
+        private BasicDIContext _context;
+
+        [SetUp]
+        public void SetUp()
+        {
+            DependencyRecorder.Clear();
+            DependencyRecorder.Start();
+            _context = new Bootstrapper().Resolver.Resolve<BasicDIContext>();
+            ((DIContext)_context).Name = ContextName;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            DependencyRecorder.Stop();
+            DependencyRecorder.Clear();
+        }
+
+        [Test]
+        public void Resolve_RecordsTheRequesterTheContractAndTheProvidingContext()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>();
+
+            _context.Resolver.Resolve<Consumer>();
+
+            DependencyEdge edge = Edge(Name<Consumer>(), Name<Service>());
+            Assert.IsNotNull(edge);
+            Assert.AreEqual(ContextName, edge.ProviderContext);
+            Assert.AreEqual(DependencyKind.Binding, edge.Kind);
+            Assert.AreEqual(1, edge.Count);
+            Assert.IsNotNull(Edge(DependencyRecorder.OutsideInjection, Name<Consumer>()), "The test's own resolve.");
+        }
+
+        [Test]
+        public void Resolve_SameDependencyAgain_CountsTheEdge()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>();
+
+            _context.Resolver.Resolve<Consumer>();
+            _context.Resolver.Resolve<Consumer>();
+
+            Assert.AreEqual(2, Edge(Name<Consumer>(), Name<Service>()).Count);
+        }
+
+        [Test]
+        public void Resolve_ArgumentAndMissingOptional_AreRecordedAsSuch()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>().WithArgument("argument");
+
+            _context.Resolver.Resolve<Consumer>();
+
+            Assert.AreEqual(DependencyKind.Argument, Edge(Name<Consumer>(), "String").Kind);
+            Assert.AreEqual(DependencyKind.MissingOptional, Edge(Name<Consumer>(), Name<MissingService>()).Kind);
+        }
+
+        [Test]
+        public void RecordBindings_BindingNeverResolved_HasNoUses()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>();
+            ((DIContext)_context).RecordBindings();
+
+            _context.Resolver.Resolve<Service>();
+
+            DependencyContext context = DependencyRecorder.Graph.Contexts.Single(c => c.Name == ContextName);
+            Assert.AreEqual(1, Binding(context, Name<Service>()).ResolveCount);
+            Assert.AreEqual(0, Binding(context, Name<Consumer>()).ResolveCount);
+        }
+
+        [Test]
+        public void CreateNonLazyInstances_CountsAsUse_ByTheContext()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle().NonLazy();
+            ((DIContext)_context).RecordBindings();
+
+            _context.CreateNonLazyInstances();
+
+            DependencyContext context = DependencyRecorder.Graph.Contexts.Single(c => c.Name == ContextName);
+            Assert.AreEqual(1, Binding(context, Name<Service>()).ResolveCount);
+            Assert.IsNotNull(Edge(DependencyRecorder.NonLazy, Name<Service>()));
+        }
+
+        [Test]
+        public void RecordBindings_DescribesTheBinding()
+        {
+            _context.Binder.Bind<List<string>>().ToNew<List<string>>().PerRequest().Untracked();
+            ((DIContext)_context).RecordBindings();
+
+            DependencyBinding binding = Binding(DependencyRecorder.Graph.Contexts.Single(), "List<String>");
+
+            Assert.AreEqual("List<String>", binding.Concrete);
+            Assert.AreEqual(InstanceAmountMode.PerRequest, binding.AmountMode);
+            Assert.AreEqual(InstanceCreationMode.FromNew, binding.CreationMode);
+            Assert.IsFalse(binding.Tracked);
+        }
+
+        [Test]
+        public void Resolve_NotRecording_RecordsNothing()
+        {
+            DependencyRecorder.Stop();
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>();
+
+            _context.Resolver.Resolve<Consumer>();
+
+            CollectionAssert.IsEmpty(DependencyRecorder.Graph.Edges);
+        }
+
+        [Test]
+        public void GameObjectContext_IsNamedWithoutCloneAndKnowsItsParent()
+        {
+            using TestApp app = new TestApp();
+            ((DIContext)app.Context).Name = "App";
+            GameObject pooled = new GameObject("Pooled(Clone)");
+            pooled.transform.SetParent(app.Root.transform);
+            GameObjectContext context = pooled.AddComponent<GameObjectContext>();
+            typeof(MonoContext).GetField("_monoInstallers", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(context, new MonoInstaller[0]);
+
+            new GameObjectInjector().InjectIntoContextHierarchy(pooled.transform, app.Resolver);
+
+            DependencyContext recorded = DependencyRecorder.Graph.Contexts.Single(c => c.Name == "GameObjectContext Pooled");
+            Assert.AreEqual("App", recorded.Parent);
+        }
+
+        [Test]
+        public void Export_WritesMermaidAndDot_AndFilters()
+        {
+            _context.Binder.BindToNewSelf<Service>().AsSingle();
+            _context.Binder.BindToNewSelf<Consumer>();
+            _context.Binder.Bind<List<string>>().ToNew<List<string>>();
+            ((DIContext)_context).RecordBindings();
+            _context.Resolver.Resolve<Consumer>();
+
+            string mermaid = DependencyRecorder.ToMermaid();
+            string dot = DependencyRecorder.ToDot();
+            string filtered = DependencyRecorder.ToMermaid(nameof(Service));
+
+            StringAssert.StartsWith("flowchart LR", mermaid);
+            StringAssert.Contains("List#lt;String#gt;", mermaid);
+            StringAssert.StartsWith("digraph DI {", dot);
+            StringAssert.Contains("->", dot);
+            StringAssert.Contains(nameof(Service), filtered);
+            StringAssert.DoesNotContain("List#lt;String#gt;", filtered);
+        }
+
+        [Test]
+        public void RecordBindings_BindingWithSeveralContracts_IsOneNode()
+        {
+            _context.Binder.Bind<Service>().And<ServiceContract>().ToNew<Service>().AsSingle();
+            ((DIContext)_context).RecordBindings();
+
+            _context.Resolver.Resolve<ServiceContract>();
+
+            DependencyBinding binding = DependencyRecorder.Graph.Contexts.Single().Bindings.Single(b => !b.IsInternal);
+            Assert.AreEqual($"{Name<Service>()} | {Name<ServiceContract>()}", binding.Contract);
+            Assert.AreEqual(1, binding.ResolveCount);
+        }
+
+        // E.g. a context resolving its own bindings while it initializes, before they're recorded.
+        [Test]
+        public void RecordBindings_AfterAResolveOfOneContract_MergesIntoOneNode()
+        {
+            _context.Binder.Bind<Service>().And<ServiceContract>().ToNew<Service>().AsSingle();
+            _context.Resolver.Resolve<Service>();
+
+            ((DIContext)_context).RecordBindings();
+
+            DependencyBinding binding = DependencyRecorder.Graph.Contexts.Single().Bindings.Single(b => !b.IsInternal);
+            CollectionAssert.AreEquivalent(new[] { Name<Service>(), Name<ServiceContract>() }, binding.Contracts);
+            Assert.AreEqual(1, binding.ResolveCount);
+        }
+
+        [Test]
+        public void ScopedFactory_ResolvesDuringInitScope_BelongToTheNamedScope()
+        {
+            using TestApp app = new TestApp();
+            ((DIContext)app.Context).Name = "App";
+            app.Binder.Bind<Factory<Consumer>>().ToNew<ConsumerFactory>();
+
+            app.Resolver.Resolve<Factory<Consumer>>().Create();
+
+            Assert.IsFalse(DependencyRecorder.Graph.Contexts.Any(c => c.Name == "Context"));
+            DependencyContext scope = DependencyRecorder.Graph.Contexts.Single(c => c.Name.StartsWith("Scope "));
+            Assert.AreEqual(2, Binding(scope, Name<Service>()).ResolveCount, "InitScope and the consumer resolve it.");
+        }
+
+        [Test]
+        public void TypeNames_SameShortName_GetsTheNamespace()
+        {
+            string threading = TypeNames.Get(typeof(System.Threading.Timer));
+            string timers = TypeNames.Get(typeof(System.Timers.Timer));
+
+            Assert.AreNotEqual(threading, timers);
+            Assert.IsTrue(threading.StartsWith("System.") || timers.StartsWith("System."));
+        }
+
+        [Test]
+        public void InternalPlumbing_IsFlagged_AndLeftOutOfTheExport()
+        {
+            using TestApp app = new TestApp();
+            ((DIContext)app.Context).Name = "App";
+            ((DIContext)app.Context).RecordBindings();
+
+            app.Resolver.Resolve<GameObjectInjector>();
+
+            DependencyBinding injector = DependencyRecorder.Graph.FindBinding("App", nameof(GameObjectInjector));
+            Assert.IsTrue(injector.IsInternal);
+            StringAssert.DoesNotContain(nameof(GameObjectInjector), DependencyRecorder.ToMermaid());
+            StringAssert.Contains(nameof(GameObjectInjector), DependencyRecorder.ToMermaid(hideInternals: false));
+        }
+
+        [Test]
+        public void TypeNames_GenericOverAnInternalType_IsInternal()
+        {
+            Assert.IsTrue(TypeNames.IsInternal(typeof(Factory<ChildDIContext, Resolver>)));
+            Assert.IsFalse(TypeNames.IsInternal(typeof(Factory<Service>)));
+        }
+
+        [Test]
+        public void ScopedFactoryCreate_IsTheRequesterOfItsProduct()
+        {
+            using TestApp app = new TestApp();
+            ((DIContext)app.Context).Name = "App";
+            app.Binder.Bind<Factory<Consumer>>().ToNew<ConsumerFactory>();
+
+            app.Resolver.Resolve<Factory<Consumer>>().Create();
+
+            Assert.IsNotNull(Edge(Name<ConsumerFactory>(), Name<Consumer>()));
+            Assert.IsNull(Edge(DependencyRecorder.OutsideInjection, Name<Consumer>()));
+        }
+
+        [Test]
+        public void ResolveInInitialize_ThroughAKeptResolver_BelongsToTheComponent()
+        {
+            _context.Binder.Bind<List<int>>().ToNew<List<int>>();
+            GameObject gameObject = new GameObject(nameof(ResolvingInitializable));
+            try
+            {
+                ResolvingInitializable component = gameObject.AddComponent<ResolvingInitializable>();
+                component.Inject(_context.Resolver);
+
+                new GameObjectInitializer().PerformActionOnHierarchy(gameObject.transform);
+
+                Assert.IsNotNull(Edge(nameof(ResolvingInitializable), "List<Int32>"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        private static string Name<T>() => $"{nameof(DependencyRecorderTests)}.{typeof(T).Name}";
+
+        private static DependencyEdge Edge(string requester, string contract) =>
+            DependencyRecorder.Graph.Edges.FirstOrDefault(e => e.Requester == requester && e.Contract == contract);
+
+        private static DependencyBinding Binding(DependencyContext context, string contract) =>
+            context.Bindings.Single(b => b.Contract == contract);
+
+        private interface ServiceContract { }
+
+        private class Service : ServiceContract { }
+
+        private class ConsumerFactory : ScopedFactory<Consumer>
+        {
+            protected override void InitScope(Resolver resolver, Binder binder)
+            {
+                binder.BindToNewSelf<Service>().AsSingle();
+                binder.BindToNewSelf<Consumer>();
+                resolver.Resolve<Service>();
+            }
+        }
+
+        private class MissingService { }
+
+        private class Consumer : Injectable
+        {
+            public void Inject(Resolver resolver)
+            {
+                resolver.Resolve<Service>();
+                resolver.ResolveOptional<string>();
+                resolver.ResolveOptional<MissingService>();
+            }
+        }
+    }
+}
