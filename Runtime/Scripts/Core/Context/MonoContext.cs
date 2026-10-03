@@ -23,7 +23,6 @@ namespace Calluna.DI
             ValidateInitCall();
             IsInitialized = true;
             DoInit(baseResolver);
-            DIContext.Name = ContextName;
             InstallBindings();
             DIContext.RecordBindings();
             ValidateBindingsOnce();
@@ -71,7 +70,7 @@ namespace Calluna.DI
         {
         }
 
-        /// <summary>The name the <see cref="DependencyRecorder"/> shows for this context.</summary>
+        /// <summary>The name the <see cref="DependencyRecorder"/> shows for this context; set by DoInit.</summary>
         protected virtual string ContextName => name;
 
         protected abstract void DoInit(Resolver resolver);

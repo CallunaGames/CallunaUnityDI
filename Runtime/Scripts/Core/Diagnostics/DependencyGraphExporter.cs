@@ -7,16 +7,16 @@ namespace Calluna.DI
 {
     /// <summary>
     /// Writes a <see cref="DependencyGraph"/> as Mermaid (flowchart) or DOT (Graphviz): contexts as groups
-    /// with their bindings, requesters pointing at what they resolved. A requester that is the concrete type
-    /// of exactly one binding is drawn as that binding, so the graph connects. Bindings never resolved are
-    /// drawn dashed. An optional filter (case-insensitive) keeps the edges and bindings whose types or
-    /// contexts contain it.
+    /// with their bindings (one node per binding, with all its contracts), requesters pointing at what they
+    /// resolved. A requester that is the concrete type of exactly one binding is drawn as that binding, so the
+    /// graph connects. Bindings never used are drawn dashed. An optional filter (case-insensitive) keeps the
+    /// edges and bindings whose types or contexts contain it; the DI's own plumbing is left out by default.
     /// </summary>
     public static class DependencyGraphExporter
     {
-        public static string ToMermaid(DependencyGraph graph, string filter = null)
+        public static string ToMermaid(DependencyGraph graph, string filter = null, bool hideInternals = true)
         {
-            Model model = new Model(graph, filter);
+            Model model = new Model(graph, filter, hideInternals);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("flowchart LR");
             sb.AppendLine("    classDef unused stroke-dasharray: 4 4,color:#888");
@@ -53,9 +53,9 @@ namespace Calluna.DI
             return sb.ToString();
         }
 
-        public static string ToDot(DependencyGraph graph, string filter = null)
+        public static string ToDot(DependencyGraph graph, string filter = null, bool hideInternals = true)
         {
-            Model model = new Model(graph, filter);
+            Model model = new Model(graph, filter, hideInternals);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("digraph DI {");
             sb.AppendLine("    rankdir=LR;");
@@ -100,7 +100,8 @@ namespace Calluna.DI
             string amount = binding.AmountMode == InstanceAmountMode.Single
                 ? "Single"
                 : binding.Tracked ? "PerRequest" : "PerRequest, untracked";
-            string concrete = binding.Concrete == null || binding.Contract.EndsWith(binding.Concrete, StringComparison.Ordinal)
+            string concrete = binding.Concrete == null || binding.Contracts.Contains(binding.Concrete) ||
+                              binding.Contract.EndsWith(binding.Concrete, StringComparison.Ordinal)
                 ? string.Empty
                 : binding.Concrete + " · ";
             return $"{concrete}{amount} · {binding.CreationMode} · used {binding.ResolveCount}×";
@@ -122,13 +123,15 @@ namespace Calluna.DI
             public readonly List<DependencyEdge> Edges = new List<DependencyEdge>();
             public readonly List<string> FreeRequesters = new List<string>();
 
+            private readonly DependencyGraph _graph;
             private readonly Dictionary<DependencyContext, List<DependencyBinding>> _bindings =
                 new Dictionary<DependencyContext, List<DependencyBinding>>();
             private readonly Dictionary<object, string> _ids = new Dictionary<object, string>();
             private readonly Dictionary<string, DependencyBinding> _bindingOfConcrete = new Dictionary<string, DependencyBinding>();
 
-            public Model(DependencyGraph graph, string filter)
+            public Model(DependencyGraph graph, string filter, bool hideInternals)
             {
+                _graph = graph;
                 bool all = string.IsNullOrWhiteSpace(filter);
                 bool Matches(string text) => all || (text != null && text.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
 
@@ -144,7 +147,11 @@ namespace Calluna.DI
                 HashSet<DependencyBinding> included = new HashSet<DependencyBinding>();
                 foreach (DependencyEdge edge in graph.Edges.OrderBy(e => e.Requester).ThenBy(e => e.Contract))
                 {
-                    DependencyBinding target = edge.Kind == DependencyKind.Binding ? Find(graph, edge) : null;
+                    if (hideInternals && edge.IsInternal)
+                        continue;
+                    DependencyBinding target = edge.Kind == DependencyKind.Binding
+                        ? graph.FindBinding(edge.ProviderContext, edge.Contract)
+                        : null;
                     if (!Matches(edge.Requester) && !Matches(edge.Contract) && !Matches(edge.ProviderContext) &&
                         !Matches(target?.Concrete))
                         continue;
@@ -160,7 +167,9 @@ namespace Calluna.DI
                 foreach (DependencyContext context in graph.Contexts.OrderBy(c => c.Name))
                 {
                     List<DependencyBinding> bindings = context.Bindings
-                        .Where(b => included.Contains(b) || Matches(b.Contract) || Matches(b.Concrete) || Matches(context.Name))
+                        .Where(b => included.Contains(b) ||
+                                    (!(hideInternals && b.IsInternal) &&
+                                     (Matches(b.Contract) || Matches(b.Concrete) || Matches(context.Name))))
                         .OrderBy(b => b.Contract)
                         .ToList();
                     if (bindings.Count == 0)
@@ -177,7 +186,7 @@ namespace Calluna.DI
             public string RequesterId(string requester) => Id("requester:" + requester, "r");
 
             public string SourceId(string requester) =>
-                _bindingOfConcrete.TryGetValue(requester, out DependencyBinding binding) && IsDrawn(binding)
+                _bindingOfConcrete.TryGetValue(requester, out DependencyBinding binding)
                     ? BindingId(binding)
                     : RequesterId(requester);
 
@@ -185,26 +194,12 @@ namespace Calluna.DI
             {
                 if (edge.Kind != DependencyKind.Binding)
                     return Id($"{edge.Kind}:{edge.Contract}", edge.Kind == DependencyKind.Argument ? "a" : "m");
-                return Id($"binding:{edge.ProviderContext}:{edge.Contract}", "b");
+                DependencyBinding binding = _graph.FindBinding(edge.ProviderContext, edge.Contract);
+                return binding != null ? BindingId(binding) : Id($"binding:{edge.ProviderContext}:{edge.Contract}", "b");
             }
-
-            private bool IsDrawn(DependencyBinding binding) =>
-                _bindings.TryGetValue(FindContext(binding), out List<DependencyBinding> list) && list.Contains(binding);
-
-            private DependencyContext FindContext(DependencyBinding binding) =>
-                Contexts.FirstOrDefault(c => c.Name == binding.Context) ?? new DependencyContext(binding.Context);
-
-            private DependencyBinding Find(DependencyGraph graph, DependencyEdge edge) =>
-                graph.ContextsByName.TryGetValue(edge.ProviderContext, out DependencyContext context) &&
-                context.BindingsByContract.TryGetValue(edge.Contract, out DependencyBinding binding)
-                    ? binding
-                    : null;
 
             private string Id(object node, string prefix)
             {
-                // A binding and the edge target pointing at it share one id.
-                if (node is DependencyBinding binding)
-                    node = $"binding:{binding.Context}:{binding.Contract}";
                 if (!_ids.TryGetValue(node, out string id))
                 {
                     id = prefix + _ids.Count;

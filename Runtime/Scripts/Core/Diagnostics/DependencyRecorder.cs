@@ -27,7 +27,7 @@ namespace Calluna.DI
         public const string RecordOnPlayPrefsKey = "Calluna.DI.DependencyRecorder.RecordOnPlay";
 
         private static readonly DependencyGraph s_graph = new DependencyGraph();
-        private static readonly List<string> s_requesters = new List<string>();
+        private static readonly List<(string Name, bool IsInternal)> s_requesters = new List<(string, bool)>();
         private static bool s_recording;
 
         public static DependencyGraph Graph => s_graph;
@@ -72,15 +72,17 @@ namespace Calluna.DI
             OnChanged?.Invoke();
         }
 
-        public static string ToMermaid(string filter = null) => DependencyGraphExporter.ToMermaid(s_graph, filter);
+        public static string ToMermaid(string filter = null, bool hideInternals = true) =>
+            DependencyGraphExporter.ToMermaid(s_graph, filter, hideInternals);
 
-        public static string ToDot(string filter = null) => DependencyGraphExporter.ToDot(s_graph, filter);
+        public static string ToDot(string filter = null, bool hideInternals = true) =>
+            DependencyGraphExporter.ToDot(s_graph, filter, hideInternals);
 
-        public static void WriteMermaid(string path, string filter = null) =>
-            File.WriteAllText(path, ToMermaid(filter), Encoding.UTF8);
+        public static void WriteMermaid(string path, string filter = null, bool hideInternals = true) =>
+            File.WriteAllText(path, ToMermaid(filter, hideInternals), Encoding.UTF8);
 
-        public static void WriteDot(string path, string filter = null) =>
-            File.WriteAllText(path, ToDot(filter), Encoding.UTF8);
+        public static void WriteDot(string path, string filter = null, bool hideInternals = true) =>
+            File.WriteAllText(path, ToDot(filter, hideInternals), Encoding.UTF8);
 
         // Each play session (and each build start) records a graph of its own - also without a domain reload.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -98,7 +100,8 @@ namespace Calluna.DI
 
         // --- Hooks (callers check IsRecording first) ---
 
-        internal static void PushRequester(Type requester) => s_requesters.Add(TypeNames.Get(requester));
+        internal static void PushRequester(Type requester) =>
+            s_requesters.Add((TypeNames.Get(requester), TypeNames.IsInternal(requester)));
 
         internal static void PopRequester()
         {
@@ -112,36 +115,44 @@ namespace Calluna.DI
             DependencyContext context = s_graph.GetOrAddContext(name);
             context.Parent = parent;
             context.InitCount++;
+            // One node per binding with all its contracts (Bind<A>().And<B>()).
+            Dictionary<Binding, List<BindingKey>> keysByBinding = new Dictionary<Binding, List<BindingKey>>();
             foreach (KeyValuePair<BindingKey, Binding> entry in bindings)
-                Describe(context.GetOrAddBinding(TypeNames.Get(entry.Key)), entry.Value);
+            {
+                if (!keysByBinding.TryGetValue(entry.Value, out List<BindingKey> keys))
+                    keysByBinding.Add(entry.Value, keys = new List<BindingKey>());
+                keys.Add(entry.Key);
+            }
+            foreach (KeyValuePair<Binding, List<BindingKey>> entry in keysByBinding)
+                Describe(context.GetOrAddBinding(Contracts(entry.Value)), entry.Value, entry.Key);
             foreach (Binding binding in nonResolvableBindings)
-                Describe(context.GetOrAddBinding(NonResolvableContract(binding)), binding);
+                Describe(context.GetOrAddBinding(new[] { NonResolvableContract(binding) }), null, binding);
             OnChanged?.Invoke();
         }
 
         internal static void RecordResolve(BindingKey key, string providerContext, Binding binding)
         {
             string contract = TypeNames.Get(key);
-            DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(contract);
+            DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
             if (node.Concrete == null)
-                Describe(node, binding);
+                Describe(node, new[] { key }, binding);
             node.ResolveCount++;
-            AddEdge(contract, providerContext, DependencyKind.Binding);
+            AddEdge(contract, providerContext, DependencyKind.Binding, IsInternal(key));
         }
 
         internal static void RecordNonLazy(string providerContext, Binding binding, List<BindingKey> keys)
         {
-            s_requesters.Add(NonLazy);
+            s_requesters.Add((NonLazy, false));
             try
             {
                 if (keys.Count == 0)
                 {
                     string contract = NonResolvableContract(binding);
-                    DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(contract);
+                    DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
                     if (node.Concrete == null)
-                        Describe(node, binding);
+                        Describe(node, null, binding);
                     node.ResolveCount++;
-                    AddEdge(contract, providerContext, DependencyKind.Binding);
+                    AddEdge(contract, providerContext, DependencyKind.Binding, TypeNames.IsInternal(binding.ConcreteType));
                 }
                 foreach (BindingKey key in keys)
                     RecordResolve(key, providerContext, binding);
@@ -156,29 +167,47 @@ namespace Calluna.DI
             $"(non-resolvable) {TypeNames.Get(binding.ConcreteType)}";
 
         internal static void RecordArgument(BindingKey key) =>
-            AddEdge(TypeNames.Get(key), string.Empty, DependencyKind.Argument);
+            AddEdge(TypeNames.Get(key), string.Empty, DependencyKind.Argument, IsInternal(key));
 
         internal static void RecordMissingOptional(BindingKey key) =>
-            AddEdge(TypeNames.Get(key), string.Empty, DependencyKind.MissingOptional);
+            AddEdge(TypeNames.Get(key), string.Empty, DependencyKind.MissingOptional, IsInternal(key));
 
-        private static void AddEdge(string contract, string providerContext, DependencyKind kind)
+        private static bool IsInternal(BindingKey key) => TypeNames.IsInternal(key.Type);
+
+        private static string[] Contracts(List<BindingKey> keys)
         {
-            string requester = s_requesters.Count > 0 ? s_requesters[s_requesters.Count - 1] : OutsideInjection;
-            var key = (requester, contract, providerContext, kind);
+            string[] contracts = new string[keys.Count];
+            for (int i = 0; i < keys.Count; i++)
+                contracts[i] = TypeNames.Get(keys[i]);
+            return contracts;
+        }
+
+        private static void AddEdge(string contract, string providerContext, DependencyKind kind, bool contractIsInternal)
+        {
+            (string name, bool isInternal) requester = s_requesters.Count > 0
+                ? s_requesters[s_requesters.Count - 1]
+                : (OutsideInjection, false);
+            var key = (requester.name, contract, providerContext, kind);
             if (!s_graph.EdgesByKey.TryGetValue(key, out DependencyEdge edge))
             {
-                edge = new DependencyEdge(requester, contract, providerContext, kind);
+                edge = new DependencyEdge(requester.name, contract, providerContext, kind,
+                    requester.isInternal || contractIsInternal);
                 s_graph.EdgesByKey.Add(key, edge);
             }
             edge.Count++;
         }
 
-        private static void Describe(DependencyBinding node, Binding binding)
+        private static void Describe(DependencyBinding node, IEnumerable<BindingKey> keys, Binding binding)
         {
             node.Concrete = TypeNames.Get(binding.ConcreteType);
             node.CreationMode = binding.CreationMode;
             node.AmountMode = binding.AmountMode;
             node.Tracked = binding.AmountMode == InstanceAmountMode.Single || binding.TrackInstances;
+            bool isInternal = TypeNames.IsInternal(binding.ConcreteType);
+            if (keys != null)
+                foreach (BindingKey key in keys)
+                    isInternal |= IsInternal(key);
+            node.IsInternal = isInternal;
         }
     }
 }

@@ -38,6 +38,7 @@ namespace Calluna.DI
         protected override void DoInit(Resolver resolver)
 		{
             _dIContext = CreateDIContext(resolver);
+            ((DIContext)_dIContext).Name = ContextName;
             InstallSceneContextBindings();
 			ResolveDependencies();
             _sceneContextProvider.Add(this);

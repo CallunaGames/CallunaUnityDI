@@ -16,6 +16,7 @@ namespace Calluna.DI.Editor
         private enum Tab { Contexts, Requesters, Unused }
 
         private static readonly string[] s_tabNames = { "Contexts", "Requesters", "Unused bindings" };
+        private const string HideInternalsPrefsKey = "Calluna.DI.DependencyGraph.HideInternals";
 
         private Tab _tab;
         private string _search = string.Empty;
@@ -24,6 +25,8 @@ namespace Calluna.DI.Editor
         private DependencyBinding _selected;
         private GUIStyle _richLabel;
         private GUIStyle _countLabel;
+
+        private static bool HideInternals => EditorPrefs.GetBool(HideInternalsPrefsKey, true);
 
         [MenuItem("Window/Calluna/DI Dependency Graph")]
         public static void Open() => GetWindow<DependencyGraphWindow>("DI Dependency Graph");
@@ -82,6 +85,12 @@ namespace Calluna.DI.Editor
                             DependencyRecorder.Start();
                     }
                 }
+                bool hideInternals = HideInternals;
+                bool newHideInternals = GUILayout.Toggle(hideInternals,
+                    new GUIContent("Hide DI internals", "Leaves out the DI's own plumbing - in the views and the export."),
+                    EditorStyles.toolbarButton);
+                if (newHideInternals != hideInternals)
+                    EditorPrefs.SetBool(HideInternalsPrefsKey, newHideInternals);
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                 {
                     DependencyRecorder.Clear();
@@ -96,9 +105,9 @@ namespace Calluna.DI.Editor
                 if (EditorGUILayout.DropdownButton(new GUIContent("Export"), FocusType.Passive, EditorStyles.toolbarDropDown))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Mermaid file..."), false, () => Export("mmd", DependencyRecorder.ToMermaid(_search)));
-                    menu.AddItem(new GUIContent("DOT file..."), false, () => Export("dot", DependencyRecorder.ToDot(_search)));
-                    menu.AddItem(new GUIContent("Copy Mermaid"), false, () => EditorGUIUtility.systemCopyBuffer = DependencyRecorder.ToMermaid(_search));
+                    menu.AddItem(new GUIContent("Mermaid file..."), false, () => Export("mmd", DependencyRecorder.ToMermaid(_search, HideInternals)));
+                    menu.AddItem(new GUIContent("DOT file..."), false, () => Export("dot", DependencyRecorder.ToDot(_search, HideInternals)));
+                    menu.AddItem(new GUIContent("Copy Mermaid"), false, () => EditorGUIUtility.systemCopyBuffer = DependencyRecorder.ToMermaid(_search, HideInternals));
                     menu.ShowAsContext();
                 }
             }
@@ -118,7 +127,7 @@ namespace Calluna.DI.Editor
             foreach (DependencyContext context in graph.Contexts.OrderBy(c => c.Name))
             {
                 List<DependencyBinding> bindings = context.Bindings
-                    .Where(b => Matches(context.Name) || Matches(b.Contract) || Matches(b.Concrete))
+                    .Where(b => IsShown(b) && (Matches(context.Name) || Matches(b.Contract) || Matches(b.Concrete)))
                     .OrderBy(b => b.Contract)
                     .ToList();
                 if (bindings.Count == 0)
@@ -146,13 +155,17 @@ namespace Calluna.DI.Editor
             using (new EditorGUI.IndentLevelScope())
             {
                 List<DependencyEdge> users = graph.Edges
-                    .Where(e => e.Kind == DependencyKind.Binding && e.ProviderContext == binding.Context && e.Contract == binding.Contract)
+                    .Where(e => e.Kind == DependencyKind.Binding && e.ProviderContext == binding.Context &&
+                                binding.Contracts.Contains(e.Contract) && IsShown(e))
                     .OrderByDescending(e => e.Count)
                     .ToList();
                 if (users.Count == 0)
                     EditorGUILayout.LabelField("Not used while recording.", EditorStyles.miniLabel);
                 foreach (DependencyEdge edge in users)
-                    Row($"← {edge.Requester}", $"{edge.Count}×");
+                {
+                    string contract = binding.Contracts.Count > 1 ? $"   as {edge.Contract}" : string.Empty;
+                    Row($"← {edge.Requester}{contract}", $"{edge.Count}×");
+                }
             }
         }
 
@@ -161,7 +174,7 @@ namespace Calluna.DI.Editor
         private void DrawRequesters(DependencyGraph graph)
         {
             foreach (IGrouping<string, DependencyEdge> group in graph.Edges
-                         .Where(e => Matches(e.Requester) || Matches(e.Contract) || Matches(e.ProviderContext))
+                         .Where(e => IsShown(e) && (Matches(e.Requester) || Matches(e.Contract) || Matches(e.ProviderContext)))
                          .GroupBy(e => e.Requester)
                          .OrderBy(g => g.Key))
             {
@@ -193,7 +206,8 @@ namespace Calluna.DI.Editor
             foreach (DependencyContext context in graph.Contexts.OrderBy(c => c.Name))
             {
                 List<DependencyBinding> unused = context.Bindings
-                    .Where(b => b.ResolveCount == 0 && (Matches(context.Name) || Matches(b.Contract) || Matches(b.Concrete)))
+                    .Where(b => b.ResolveCount == 0 && IsShown(b) &&
+                                (Matches(context.Name) || Matches(b.Contract) || Matches(b.Concrete)))
                     .OrderBy(b => b.Contract)
                     .ToList();
                 if (unused.Count == 0)
@@ -234,6 +248,10 @@ namespace Calluna.DI.Editor
             }
             return newExpanded;
         }
+
+        private static bool IsShown(DependencyBinding binding) => !(HideInternals && binding.IsInternal);
+
+        private static bool IsShown(DependencyEdge edge) => !(HideInternals && edge.IsInternal);
 
         private bool Matches(string text) =>
             string.IsNullOrEmpty(_search) ||

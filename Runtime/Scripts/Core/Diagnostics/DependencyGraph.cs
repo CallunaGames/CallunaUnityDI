@@ -16,6 +16,13 @@ namespace Calluna.DI
         public IEnumerable<DependencyContext> Contexts => ContextsByName.Values;
         public IEnumerable<DependencyEdge> Edges => EdgesByKey.Values;
 
+        /// <summary>The binding of <paramref name="contract"/> in <paramref name="context"/>, if recorded.</summary>
+        public DependencyBinding FindBinding(string context, string contract) =>
+            ContextsByName.TryGetValue(context, out DependencyContext found) &&
+            found.BindingsByContract.TryGetValue(contract, out DependencyBinding binding)
+                ? binding
+                : null;
+
         internal DependencyContext GetOrAddContext(string name)
         {
             if (!ContextsByName.TryGetValue(name, out DependencyContext context))
@@ -35,44 +42,86 @@ namespace Calluna.DI
 
     public sealed class DependencyContext
     {
+        // Every contract of a binding (Bind<A>().And<B>()) points to the same node.
         internal readonly Dictionary<string, DependencyBinding> BindingsByContract = new Dictionary<string, DependencyBinding>();
+        private readonly List<DependencyBinding> _bindings = new List<DependencyBinding>();
 
         public string Name { get; }
         /// <summary>The context this one resolves through; null for the AppContext.</summary>
         public string Parent { get; internal set; }
         /// <summary>How often a context of this name was initialized.</summary>
         public int InitCount { get; internal set; }
-        public IEnumerable<DependencyBinding> Bindings => BindingsByContract.Values;
+        public IEnumerable<DependencyBinding> Bindings => _bindings;
 
         internal DependencyContext(string name) => Name = name;
 
-        internal DependencyBinding GetOrAddBinding(string contract)
+        /// <summary>The node of a binding with these contracts; merges nodes recorded for single contracts before.</summary>
+        internal DependencyBinding GetOrAddBinding(IReadOnlyList<string> contracts)
         {
-            if (!BindingsByContract.TryGetValue(contract, out DependencyBinding binding))
+            DependencyBinding node = null;
+            foreach (string contract in contracts)
             {
-                binding = new DependencyBinding(Name, contract);
-                BindingsByContract.Add(contract, binding);
+                if (!BindingsByContract.TryGetValue(contract, out DependencyBinding existing) || existing == node)
+                    continue;
+                if (node == null)
+                    node = existing;
+                else
+                    Merge(existing, node);
             }
-            return binding;
+            if (node == null)
+            {
+                node = new DependencyBinding(Name);
+                _bindings.Add(node);
+            }
+            foreach (string contract in contracts)
+            {
+                node.AddContract(contract);
+                BindingsByContract[contract] = node;
+            }
+            return node;
+        }
+
+        private void Merge(DependencyBinding source, DependencyBinding target)
+        {
+            foreach (string contract in source.Contracts)
+            {
+                target.AddContract(contract);
+                BindingsByContract[contract] = target;
+            }
+            target.ResolveCount += source.ResolveCount;
+            _bindings.Remove(source);
         }
     }
 
     public sealed class DependencyBinding
     {
+        private readonly List<string> _contracts = new List<string>();
+
         public string Context { get; }
-        /// <summary>Contract type (with its ID, if any); "(non-resolvable)" for <c>AsNonResolvable</c> bindings.</summary>
-        public string Contract { get; }
+        /// <summary>
+        /// The contract types (with their IDs, if any) joined by " | ";
+        /// "(non-resolvable) …" for <c>AsNonResolvable</c> bindings.
+        /// </summary>
+        public string Contract { get; private set; } = string.Empty;
+        public IReadOnlyList<string> Contracts => _contracts;
         public string Concrete { get; internal set; }
         public InstanceCreationMode CreationMode { get; internal set; }
         public InstanceAmountMode AmountMode { get; internal set; }
         public bool Tracked { get; internal set; }
+        /// <summary>A binding of the DI's own plumbing, or a context's binding of itself.</summary>
+        public bool IsInternal { get; internal set; }
         /// <summary>How often it was resolved (or created eagerly). 0: bound, but never used while recording.</summary>
         public int ResolveCount { get; internal set; }
 
-        internal DependencyBinding(string context, string contract)
+        internal DependencyBinding(string context) => Context = context;
+
+        internal void AddContract(string contract)
         {
-            Context = context;
-            Contract = contract;
+            if (_contracts.Contains(contract))
+                return;
+            _contracts.Add(contract);
+            _contracts.Sort(System.StringComparer.Ordinal);
+            Contract = string.Join(" | ", _contracts);
         }
     }
 
@@ -93,18 +142,22 @@ namespace Calluna.DI
         /// <see cref="DependencyRecorder.OutsideInjection"/> for resolves through a kept resolver later on.
         /// </summary>
         public string Requester { get; }
+        /// <summary>The single contract that was requested.</summary>
         public string Contract { get; }
         /// <summary>The context whose binding served the request; empty for arguments and missing optionals.</summary>
         public string ProviderContext { get; }
         public DependencyKind Kind { get; }
+        /// <summary>Requested by the DI itself, or of the DI's own plumbing.</summary>
+        public bool IsInternal { get; }
         public int Count { get; internal set; }
 
-        internal DependencyEdge(string requester, string contract, string providerContext, DependencyKind kind)
+        internal DependencyEdge(string requester, string contract, string providerContext, DependencyKind kind, bool isInternal)
         {
             Requester = requester;
             Contract = contract;
             ProviderContext = providerContext;
             Kind = kind;
+            IsInternal = isInternal;
         }
     }
 }

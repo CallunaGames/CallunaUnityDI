@@ -21,6 +21,7 @@ namespace Calluna.DI
 			{
 				_currentContext.Reinitialize(resolver);
 			}
+			((DIContext)_currentContext).Name = ContextName;
 		}
 
 		private ChildDIContext CreateDIContext(Resolver resolver)

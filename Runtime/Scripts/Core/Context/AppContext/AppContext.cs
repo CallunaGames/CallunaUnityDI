@@ -37,6 +37,7 @@ namespace Calluna.DI
         protected override void DoInit(Resolver resolver)
         {
             _dIContext = resolver.Resolve<BasicDIContext>();
+            ((DIContext)_dIContext).Name = ContextName;
             InstallAppContextBindings();
             _sceneContextProvider = _resolver.Resolve<SceneContextProvider>();
             // Created right away, as before 1.6.0 - not lazily while quitting.

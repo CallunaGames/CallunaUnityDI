@@ -1,3 +1,13 @@
+## [1.7.0-pre.4] - 2026-10-03
+
+### Changed
+- Dependency graph: one node per binding with all its contracts (`Bind<A>().And<B>()` shows as `A | B`). Before, every contract was its own node, so e.g. `Pool<X>` showed as never used when pools are requested as `Pool<X, PrefabInstantiationArguments>`.
+- Dependency graph: the DI's own plumbing (its internal types and the contexts' bindings of themselves) is hidden by default - *Hide DI internals* in the window, `hideInternals` in `ToMermaid`/`ToDot`/`WriteMermaid`/`WriteDot`. `DependencyBinding.IsInternal`, `DependencyEdge.IsInternal`, `DependencyGraph.FindBinding`.
+- Dependency graph: types sharing a short name are told apart by their namespace (e.g. `JsonSerializer` and `Newtonsoft.Json.JsonSerializer`).
+
+### Fixed
+- Dependency graph: resolves while a context initializes (the AppContext and scene contexts resolving their own bindings, scoped factories in `InitScope`) were recorded under the default name "Context". Contexts are named as soon as they're created now.
+
 ## [1.7.0-pre.3] - 2026-10-03
 
 ### Fixed

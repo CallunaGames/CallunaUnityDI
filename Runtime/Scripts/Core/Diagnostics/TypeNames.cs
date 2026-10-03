@@ -4,10 +4,16 @@ using System.Linq;
 
 namespace Calluna.DI
 {
-    /// <summary>Readable, cached type names for the dependency graph: <c>ValueTweener&lt;Vector2&gt;</c>, <c>Outer.Inner</c>.</summary>
+    /// <summary>
+    /// Readable, cached type names for the dependency graph: <c>ValueTweener&lt;Vector2&gt;</c>, <c>Outer.Inner</c>.
+    /// A type whose short name is already taken by another type gets its namespace
+    /// (e.g. <c>Newtonsoft.Json.JsonSerializer</c> next to <c>JsonSerializer</c>).
+    /// </summary>
     internal static class TypeNames
     {
         private static readonly Dictionary<Type, string> s_names = new Dictionary<Type, string>();
+        private static readonly Dictionary<string, Type> s_shortNameOwners = new Dictionary<string, Type>();
+        private static readonly System.Reflection.Assembly s_diAssembly = typeof(TypeNames).Assembly;
 
         public static string Get(BindingKey key) =>
             key.ID == null ? Get(key.Type) : $"{Get(key.Type)} [{key.ID}]";
@@ -24,7 +30,22 @@ namespace Calluna.DI
             return name;
         }
 
+        /// <summary>A type of the DI's own plumbing (not public), or the contexts' self-binding.</summary>
+        public static bool IsInternal(Type type) =>
+            type != null && type.Assembly == s_diAssembly &&
+            (!(type.IsPublic || type.IsNestedPublic) || type == typeof(DIContext));
+
         private static string Create(Type type)
+        {
+            string name = ShortName(type);
+            if (!s_shortNameOwners.TryGetValue(name, out Type owner))
+                s_shortNameOwners.Add(name, type);
+            else if (owner != type && !string.IsNullOrEmpty(type.Namespace))
+                name = $"{type.Namespace}.{name}";
+            return name;
+        }
+
+        private static string ShortName(Type type)
         {
             string name = type.Name;
             if (type.IsGenericType)

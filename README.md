@@ -696,6 +696,8 @@ See the *Event Bus* sample for a full scene example.
 2. Enter play mode and play the parts of the game you're interested in.
 3. Browse the tabs - **Contexts** (bindings with their modes and who used them; click a binding), **Requesters** (what each type resolved) and **Unused bindings** (never resolved or created while recording) - or **Export** the graph as Mermaid or DOT. The search text filters the views and the export.
 
+Each binding is one node with all its contracts (`A | B` for `Bind<A>().And<B>()`). **Hide DI internals** (on by default) leaves out the DI's own plumbing in the views and the export.
+
 Requesters are the types whose injection or creation resolved something. Resolves through a resolver kept for later appear as `(outside injection)`, eagerly created instances as `(non-lazy)`. A requester that is the concrete type of exactly one binding is drawn as that binding in the export.
 
 In builds, define `CALLUNA_DI_RECORDER`: the recorder starts automatically, and `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)` write the graph. Without the define, recording is compiled out to constant `false` checks.

@@ -9,10 +9,12 @@
             _parentResolver = resolver;
         }
 
-        private static ChildDIContext CreateDIContext(Resolver resolver)
+        private ChildDIContext CreateDIContext(Resolver resolver)
         {
             Factory<ChildDIContext, Resolver> contextFactory = resolver.Resolve<Factory<ChildDIContext, Resolver>>();
-            return contextFactory.Create(resolver);
+            ChildDIContext context = contextFactory.Create(resolver);
+            ((DIContext)context).Name = $"Scope {TypeNames.Get(GetType())}";
+            return context;
         }
 
         protected T DoCreation()
@@ -32,7 +34,6 @@
             try
             {
                 InitScope(childContext.Resolver, childContext.Binder);
-                ((DIContext)childContext).Name = $"Scope {TypeNames.Get(GetType())}";
                 ((DIContext)childContext).RecordBindings();
                 childContext.ValidateBindings();
                 T result = childContext.Resolver.Resolve<T>();
