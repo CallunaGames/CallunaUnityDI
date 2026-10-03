@@ -698,7 +698,7 @@ See the *Event Bus* sample for a full scene example.
 
 Each binding is one node with all its contracts (`A | B` for `Bind<A>().And<B>()`). **Hide DI internals** (on by default) leaves out the DI's own plumbing in the views and the export.
 
-Requesters are the types whose injection or creation resolved something. Resolves through a resolver kept for later appear as `(outside injection)`, eagerly created instances as `(non-lazy)`. A requester that is the concrete type of exactly one binding is drawn as that binding in the export.
+Requesters are the types being injected or created, components in their `Initialize` / `Clean` / `HandleQuit`, installers, and scoped factories creating their product. Resolves through a resolver kept for later appear as `(outside injection)`, eagerly created instances as `(non-lazy)`. A requester that is the concrete type of exactly one binding is drawn as that binding in the export.
 
 In builds, define `CALLUNA_DI_RECORDER`: the recorder starts automatically, and `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)` write the graph. Without the define, recording is compiled out to constant `false` checks.
 

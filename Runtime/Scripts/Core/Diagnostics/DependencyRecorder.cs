@@ -103,6 +103,28 @@ namespace Calluna.DI
         internal static void PushRequester(Type requester) =>
             s_requesters.Add((TypeNames.Get(requester), TypeNames.IsInternal(requester)));
 
+        /// <summary>Pushes <paramref name="requester"/> while recording; dispose to pop it.</summary>
+        internal static RequesterScope Requester(Type requester)
+        {
+            if (!IsRecording)
+                return default;
+            PushRequester(requester);
+            return new RequesterScope(true);
+        }
+
+        internal readonly struct RequesterScope : IDisposable
+        {
+            private readonly bool _pushed;
+
+            public RequesterScope(bool pushed) => _pushed = pushed;
+
+            public void Dispose()
+            {
+                if (_pushed)
+                    PopRequester();
+            }
+        }
+
         internal static void PopRequester()
         {
             if (s_requesters.Count > 0)
@@ -137,7 +159,8 @@ namespace Calluna.DI
             if (node.Concrete == null)
                 Describe(node, new[] { key }, binding);
             node.ResolveCount++;
-            AddEdge(contract, providerContext, DependencyKind.Binding, IsInternal(key));
+            AddEdge(contract, providerContext, DependencyKind.Binding,
+                IsInternal(key) || TypeNames.IsInternal(binding.ConcreteType));
         }
 
         internal static void RecordNonLazy(string providerContext, Binding binding, List<BindingKey> keys)

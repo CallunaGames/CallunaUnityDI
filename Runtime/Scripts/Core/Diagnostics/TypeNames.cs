@@ -30,10 +30,18 @@ namespace Calluna.DI
             return name;
         }
 
-        /// <summary>A type of the DI's own plumbing (not public), or the contexts' self-binding.</summary>
-        public static bool IsInternal(Type type) =>
-            type != null && type.Assembly == s_diAssembly &&
-            (!(type.IsPublic || type.IsNestedPublic) || type == typeof(DIContext));
+        /// <summary>
+        /// A type of the DI's own plumbing (not public), the contexts' self-binding, or a generic type over
+        /// one of them (e.g. <c>Factory&lt;ChildDIContext, Resolver&gt;</c>).
+        /// </summary>
+        public static bool IsInternal(Type type)
+        {
+            if (type == null)
+                return false;
+            if (type.Assembly == s_diAssembly && (!(type.IsPublic || type.IsNestedPublic) || type == typeof(DIContext)))
+                return true;
+            return type.IsGenericType && type.GetGenericArguments().Any(IsInternal);
+        }
 
         private static string Create(Type type)
         {

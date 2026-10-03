@@ -1,32 +1,15 @@
-## [1.7.0-pre.4] - 2026-10-03
+## [1.7.0] - 2026-10-03
 
-### Changed
-- Dependency graph: one node per binding with all its contracts (`Bind<A>().And<B>()` shows as `A | B`). Before, every contract was its own node, so e.g. `Pool<X>` showed as never used when pools are requested as `Pool<X, PrefabInstantiationArguments>`.
-- Dependency graph: the DI's own plumbing (its internal types and the contexts' bindings of themselves) is hidden by default - *Hide DI internals* in the window, `hideInternals` in `ToMermaid`/`ToDot`/`WriteMermaid`/`WriteDot`. `DependencyBinding.IsInternal`, `DependencyEdge.IsInternal`, `DependencyGraph.FindBinding`.
-- Dependency graph: types sharing a short name are told apart by their namespace (e.g. `JsonSerializer` and `Newtonsoft.Json.JsonSerializer`).
-
-### Fixed
-- Dependency graph: resolves while a context initializes (the AppContext and scene contexts resolving their own bindings, scoped factories in `InitScope`) were recorded under the default name "Context". Contexts are named as soon as they're created now.
-
-## [1.7.0-pre.3] - 2026-10-03
-
-### Fixed
-- DI Dependency Graph window: the rows of the Requesters and Unused tabs and the users of a binding were cut off at the label width; they use the full width now (count right-aligned, full text as tooltip). The tabs have a fixed width, so the toolbar fits.
-
-## [1.7.0-pre.2] - 2026-10-03
-
-### Added
-- **Dependency graph.** `DependencyRecorder` records at runtime which type resolved which contract from which context, and the bindings of every context - aggregated by type, so pooled objects don't multiply the graph. Arguments, missing optional dependencies and eagerly created instances (`NonLazy`, `AsNonResolvable`) are recorded as such; resolves through a resolver kept for later appear as `(outside injection)`.
-  - Editor window *Window > Calluna > DI Dependency Graph*: contexts with their bindings (amount and creation mode, tracked, uses) and who used them, what each requester resolved, and bindings never used while recording. Search filter; export as Mermaid or DOT (filtered by the search), or copy the Mermaid text.
-  - Recording starts on entering play mode with *Record on Play* (EditorPrefs), or with `DependencyRecorder.Start()`. In builds only with the scripting define `CALLUNA_DI_RECORDER` - it starts automatically there; export with `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)`. Without the define the hooks are constant `false` checks.
-  - Contexts are named for the graph: `AppContext`, `Scene <scene> (<ID>)`, `GameObjectContext <object>` (without `(Clone)`, so the contexts of a pooled prefab are merged), `Scope <factory>`.
-- Editor assembly `Calluna.DI.Editor`.
-
-## [1.7.0-pre.1] - 2026-10-03
+Requires `com.calluna.core` 1.7.0. Consolidates 1.7.0-pre.1 to pre.4 plus the requester fixes below, tested in the game (restart, quitting, recording longer sessions).
 
 ### Added
 - **Stored pool items are destroyed once no pool uses them anymore.** The `MonoPoolCache` (in the AppContext) stores returned items shared by prefab. Pools now register there as users of their prefabs and unregister when they're disposed with their context; a scene context's reset destroys the stored items no live pool uses - e.g. those of an unloaded scene, which stayed below the AppContext until the same prefab was requested again. GameObjectContexts don't clean up: a pooled object's context is reset on every return and its pools are recreated on the next take, reusing the stored items. Items of a prefab that a pool of another context still uses are kept.
 - `MonoPoolBase` implements `IDisposable` (`Dispose()` unregisters the pool) and has `UseCacheKey(int)` for own pools.
+- **Dependency graph.** `DependencyRecorder` records at runtime which type resolved which contract from which context, and the bindings of every context - aggregated by type, so pooled objects don't multiply the graph. One node per binding with all its contracts (`Bind<A>().And<B>()` shows as `A | B`). Arguments, missing optional dependencies and eagerly created instances (`NonLazy`, `AsNonResolvable`) are recorded as such. Requesters are the types being injected or created, the components in their `Initialize` / `Clean` / `HandleQuit`, installers, and scoped factories creating their product; resolves through a resolver kept for later appear as `(outside injection)`.
+  - Editor window *Window > Calluna > DI Dependency Graph*: contexts with their bindings (amount and creation mode, tracked, uses) and who used them, what each requester resolved, and bindings never used while recording. Search filter; *Hide DI internals* (on by default) leaves out the DI's own plumbing. Export as Mermaid or DOT (filtered like the views), or copy the Mermaid text.
+  - Recording starts on entering play mode with *Record on Play* (EditorPrefs), or with `DependencyRecorder.Start()`. In builds only with the scripting define `CALLUNA_DI_RECORDER` - it starts automatically there; export with `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)`. Without the define the hooks are constant `false` checks.
+  - Contexts are named for the graph as soon as they're created: `AppContext`, `Scene <scene> (<ID>)`, `GameObjectContext <object>` (without `(Clone)`, so the contexts of a pooled prefab are merged), `Scope <factory>`. Types sharing a short name are told apart by their namespace.
+- Editor assembly `Calluna.DI.Editor`.
 
 ### Fixed
 - `AbstractMonoPoolInstaller` bound its pool with `ToInstance`, so the context never disposed it (and the variant without argument didn't inject it before 1.6.0). It binds it with `FromMethod` as a single instance now.

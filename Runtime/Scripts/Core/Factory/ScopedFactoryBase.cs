@@ -19,14 +19,18 @@
 
         protected T DoCreation()
         {
-            return DoCreation(CreateDIContext(_parentResolver));
+            using (DependencyRecorder.Requester(GetType()))
+                return DoCreation(CreateDIContext(_parentResolver));
         }
 
         protected T DoCreation<TArgument>(TArgument argument)
         {
-            ChildDIContext childContext = CreateDIContext(_parentResolver);
-            childContext.Binder.BindInstance(argument);
-            return DoCreation(childContext);
+            using (DependencyRecorder.Requester(GetType()))
+            {
+                ChildDIContext childContext = CreateDIContext(_parentResolver);
+                childContext.Binder.BindInstance(argument);
+                return DoCreation(childContext);
+            }
         }
 
         private T DoCreation(ChildDIContext childContext)

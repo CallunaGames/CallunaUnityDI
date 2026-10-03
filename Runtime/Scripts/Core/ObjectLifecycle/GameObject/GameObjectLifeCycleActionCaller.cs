@@ -32,7 +32,9 @@ namespace Calluna.DI
         private void PerformAction(TActionHolder actionHolder)
         {
             _callAction ??= CallAction;
-            SafeInvoker.Invoke(actionHolder, _callAction, actionHolder as Object);
+            // Resolves in Initialize / Clean / HandleQuit (through a kept resolver) belong to the component.
+            using (DependencyRecorder.Requester(actionHolder.GetType()))
+                SafeInvoker.Invoke(actionHolder, _callAction, actionHolder as Object);
         }
 
         protected abstract void CallAction(TActionHolder actionHolder);

@@ -224,6 +224,46 @@ namespace Calluna.DI.Tests
             StringAssert.Contains(nameof(GameObjectInjector), DependencyRecorder.ToMermaid(hideInternals: false));
         }
 
+        [Test]
+        public void TypeNames_GenericOverAnInternalType_IsInternal()
+        {
+            Assert.IsTrue(TypeNames.IsInternal(typeof(Factory<ChildDIContext, Resolver>)));
+            Assert.IsFalse(TypeNames.IsInternal(typeof(Factory<Service>)));
+        }
+
+        [Test]
+        public void ScopedFactoryCreate_IsTheRequesterOfItsProduct()
+        {
+            using TestApp app = new TestApp();
+            ((DIContext)app.Context).Name = "App";
+            app.Binder.Bind<Factory<Consumer>>().ToNew<ConsumerFactory>();
+
+            app.Resolver.Resolve<Factory<Consumer>>().Create();
+
+            Assert.IsNotNull(Edge(Name<ConsumerFactory>(), Name<Consumer>()));
+            Assert.IsNull(Edge(DependencyRecorder.OutsideInjection, Name<Consumer>()));
+        }
+
+        [Test]
+        public void ResolveInInitialize_ThroughAKeptResolver_BelongsToTheComponent()
+        {
+            _context.Binder.Bind<List<int>>().ToNew<List<int>>();
+            GameObject gameObject = new GameObject(nameof(ResolvingInitializable));
+            try
+            {
+                ResolvingInitializable component = gameObject.AddComponent<ResolvingInitializable>();
+                component.Inject(_context.Resolver);
+
+                new GameObjectInitializer().PerformActionOnHierarchy(gameObject.transform);
+
+                Assert.IsNotNull(Edge(nameof(ResolvingInitializable), "List<Int32>"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+
         private static string Name<T>() => $"{nameof(DependencyRecorderTests)}.{typeof(T).Name}";
 
         private static DependencyEdge Edge(string requester, string contract) =>
