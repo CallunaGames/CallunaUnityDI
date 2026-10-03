@@ -19,11 +19,11 @@ namespace Calluna.DI.Tests
     {
         private const string ParentId = "QuitTestsParent";
 
-        private static readonly FieldInfo s_idField =
+        private static readonly FieldInfo _idField =
             typeof(SceneContext).GetField("_iD", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo s_parentIdField =
+        private static readonly FieldInfo _parentIdField =
             typeof(SceneContext).GetField("_parentContextID", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo s_installersField =
+        private static readonly FieldInfo _installersField =
             typeof(MonoContext).GetField("_monoInstallers", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private readonly List<string> _log = new List<string>();
@@ -115,9 +115,9 @@ namespace Calluna.DI.Tests
             contextObject.SetActive(false);
             SceneManager.MoveGameObjectToScene(contextObject, scene);
             SceneContext context = contextObject.AddComponent<SceneContext>();
-            s_idField.SetValue(context, id);
-            s_parentIdField.SetValue(context, parentId);
-            s_installersField.SetValue(context, new MonoInstaller[] { CreateInstaller(contextObject, name) });
+            _idField.SetValue(context, id);
+            _parentIdField.SetValue(context, parentId);
+            _installersField.SetValue(context, new MonoInstaller[] { CreateInstaller(contextObject, name) });
 
             GameObject componentObject = new GameObject($"{name}-component");
             SceneManager.MoveGameObjectToScene(componentObject, scene);
@@ -128,7 +128,7 @@ namespace Calluna.DI.Tests
                 GameObject gameObjectContextObject = new GameObject($"{name}-go");
                 SceneManager.MoveGameObjectToScene(gameObjectContextObject, scene);
                 GameObjectContext gameObjectContext = gameObjectContextObject.AddComponent<GameObjectContext>();
-                s_installersField.SetValue(gameObjectContext,
+                _installersField.SetValue(gameObjectContext,
                     new MonoInstaller[] { CreateInstaller(gameObjectContextObject, $"{name}-go") });
             }
             return contextObject;

@@ -17,7 +17,7 @@ namespace Calluna.DI.Tests
     /// </summary>
     public class PoolCleanupTests
     {
-        private static readonly FieldInfo s_installersField =
+        private static readonly FieldInfo _installersField =
             typeof(MonoContext).GetField("_monoInstallers", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private TestApp _app;
@@ -146,7 +146,7 @@ namespace Calluna.DI.Tests
             GameObject gameObjectContextObject = new GameObject("PooledObjectWithContext");
             SceneManager.MoveGameObjectToScene(gameObjectContextObject, scene);
             GameObjectContext gameObjectContext = gameObjectContextObject.AddComponent<GameObjectContext>();
-            s_installersField.SetValue(gameObjectContext, new MonoInstaller[] { CreateInstaller(gameObjectContextObject, prefab) });
+            _installersField.SetValue(gameObjectContext, new MonoInstaller[] { CreateInstaller(gameObjectContextObject, prefab) });
             sceneContext.SetActive(true);
 
             Pool<PoolItem> pool = gameObjectContext.GetResolver().Resolve<Pool<PoolItem>>();
@@ -190,7 +190,7 @@ namespace Calluna.DI.Tests
             contextObject.SetActive(false);
             SceneManager.MoveGameObjectToScene(contextObject, scene);
             SceneContext context = contextObject.AddComponent<SceneContext>();
-            s_installersField.SetValue(context, prefab == null
+            _installersField.SetValue(context, prefab == null
                 ? new MonoInstaller[0]
                 : new MonoInstaller[] { CreateInstaller(contextObject, prefab) });
             return contextObject;
