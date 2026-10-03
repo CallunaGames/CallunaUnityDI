@@ -23,7 +23,9 @@ namespace Calluna.DI
             ValidateInitCall();
             IsInitialized = true;
             DoInit(baseResolver);
+            DIContext.Name = ContextName;
             InstallBindings();
+            DIContext.RecordBindings();
             ValidateBindingsOnce();
             DoInjection();
             DIContext.CreateNonLazyInstances();
@@ -69,6 +71,9 @@ namespace Calluna.DI
         {
         }
 
+        /// <summary>The name the <see cref="DependencyRecorder"/> shows for this context.</summary>
+        protected virtual string ContextName => name;
+
         protected abstract void DoInit(Resolver resolver);
         protected abstract void DoInjection();
 
@@ -98,6 +103,9 @@ namespace Calluna.DI
 
         private void InstallBindings(Installer installer, Resolver resolver)
         {
+            bool recording = DependencyRecorder.IsRecording;
+            if (recording)
+                DependencyRecorder.PushRequester(installer.GetType());
             try
             {
                 (installer as Injectable)?.Inject(resolver);
@@ -105,6 +113,11 @@ namespace Calluna.DI
             catch (MissingBindingException e)
             {
                 throw new MissingBindingException(e, installer.GetType());
+            }
+            finally
+            {
+                if (recording)
+                    DependencyRecorder.PopRequester();
             }
             installer.InstallBindings(_binder);
         }

@@ -5,6 +5,8 @@ namespace Calluna.DI
 	    private Resolver _resolver;
 	    private DIContext _parent;
 
+	    protected override string ParentName => _parent?.Name;
+
 		protected override void DoInjection(Resolver resolver)
 		{
 			base.DoInjection(resolver);

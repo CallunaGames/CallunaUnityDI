@@ -20,6 +20,8 @@ namespace Calluna.DI
 		protected override TContract DoResolve<TContract>(BindingKey key)
 		{
 			Binding binding = _container.GetBinding(key);
+			if (DependencyRecorder.IsRecording)
+				DependencyRecorder.RecordResolve(key, _diContext.Name, binding);
 			return _diContext.GetInstance<TContract>(binding);
 		}
 	}

@@ -35,6 +35,9 @@ namespace Calluna.DI
         {
             if (injectable is Installer)
                 return;
+            bool recording = DependencyRecorder.IsRecording;
+            if (recording)
+                DependencyRecorder.PushRequester(injectable.GetType());
             try
             {
                 injectable.Inject(resolver);
@@ -42,6 +45,11 @@ namespace Calluna.DI
             catch (MissingBindingException e)
             {
                 throw new MissingBindingException(e, injectable.GetType());
+            }
+            finally
+            {
+                if (recording)
+                    DependencyRecorder.PopRequester();
             }
         }
     }

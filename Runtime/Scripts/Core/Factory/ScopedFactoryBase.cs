@@ -32,6 +32,8 @@
             try
             {
                 InitScope(childContext.Resolver, childContext.Binder);
+                ((DIContext)childContext).Name = $"Scope {TypeNames.Get(GetType())}";
+                ((DIContext)childContext).RecordBindings();
                 childContext.ValidateBindings();
                 T result = childContext.Resolver.Resolve<T>();
                 childContext.MoveInstancesToParent();

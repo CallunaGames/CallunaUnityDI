@@ -1,3 +1,12 @@
+## [1.7.0-pre.2] - 2026-10-03
+
+### Added
+- **Dependency graph.** `DependencyRecorder` records at runtime which type resolved which contract from which context, and the bindings of every context - aggregated by type, so pooled objects don't multiply the graph. Arguments, missing optional dependencies and eagerly created instances (`NonLazy`, `AsNonResolvable`) are recorded as such; resolves through a resolver kept for later appear as `(outside injection)`.
+  - Editor window *Window > Calluna > DI Dependency Graph*: contexts with their bindings (amount and creation mode, tracked, uses) and who used them, what each requester resolved, and bindings never used while recording. Search filter; export as Mermaid or DOT (filtered by the search), or copy the Mermaid text.
+  - Recording starts on entering play mode with *Record on Play* (EditorPrefs), or with `DependencyRecorder.Start()`. In builds only with the scripting define `CALLUNA_DI_RECORDER` - it starts automatically there; export with `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)`. Without the define the hooks are constant `false` checks.
+  - Contexts are named for the graph: `AppContext`, `Scene <scene> (<ID>)`, `GameObjectContext <object>` (without `(Clone)`, so the contexts of a pooled prefab are merged), `Scope <factory>`.
+- Editor assembly `Calluna.DI.Editor`.
+
 ## [1.7.0-pre.1] - 2026-10-03
 
 ### Added

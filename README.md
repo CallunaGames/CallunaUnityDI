@@ -688,6 +688,20 @@ See the *Event Bus* sample for a full scene example.
 
 ---
 
+## Dependency Graph
+
+`DependencyRecorder` records the dependency graph while the game runs: which type resolved which contract from which context, plus every context's bindings - aggregated by type, so pooled objects don't multiply it.
+
+1. Open *Window > Calluna > DI Dependency Graph* and turn on **Record on Play**.
+2. Enter play mode and play the parts of the game you're interested in.
+3. Browse the tabs - **Contexts** (bindings with their modes and who used them; click a binding), **Requesters** (what each type resolved) and **Unused bindings** (never resolved or created while recording) - or **Export** the graph as Mermaid or DOT. The search text filters the views and the export.
+
+Requesters are the types whose injection or creation resolved something. Resolves through a resolver kept for later appear as `(outside injection)`, eagerly created instances as `(non-lazy)`. A requester that is the concrete type of exactly one binding is drawn as that binding in the export.
+
+In builds, define `CALLUNA_DI_RECORDER`: the recorder starts automatically, and `DependencyRecorder.WriteMermaid(path)` / `WriteDot(path)` write the graph. Without the define, recording is compiled out to constant `false` checks.
+
+---
+
 ## Application Quit Detector
 
 > **Deprecated since 1.6.0** - implement `QuitHandler` instead (see *Object Lifecycle*). `QuitDetector` keeps working until it's removed in 2.0.0.

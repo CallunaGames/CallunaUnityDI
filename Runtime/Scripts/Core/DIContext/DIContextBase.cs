@@ -20,6 +20,8 @@ namespace Calluna.DI
         private Binder _diContainerBinder;
 
         public Resolver Resolver => _diContainerResolver;
+        public string Name { get; set; } = "Context";
+        protected virtual string ParentName => null;
         public Binder Binder => _diContainerBinder;
 
         private BindingsContainer _bindings => _containers.Bindings;
@@ -77,6 +79,20 @@ namespace Calluna.DI
 
         public void PostInit() => _postInit = true;
 
+        public void RecordBindings()
+        {
+            if (!DependencyRecorder.IsRecording)
+                return;
+            HashSet<Binding> resolvable = new HashSet<Binding>();
+            foreach (KeyValuePair<BindingKey, Binding> entry in _bindings.Entries)
+                resolvable.Add(entry.Value);
+            List<Binding> nonResolvable = new List<Binding>();
+            foreach (Binding binding in _nonLazyBindings.Bindings)
+                if (!resolvable.Contains(binding))
+                    nonResolvable.Add(binding);
+            DependencyRecorder.RecordContext(Name, ParentName, _bindings.Entries, nonResolvable);
+        }
+
         protected void RebuildResolver()
         {
             _diContainerResolver = CreateResolver(_bindings);
@@ -131,6 +147,9 @@ namespace Calluna.DI
                 throw new CircularDependencyException(GetCreationChainTypes(concreteType));
 
             _creationChain.Add(binding);
+            bool recording = DependencyRecorder.IsRecording;
+            if (recording)
+                DependencyRecorder.PushRequester(concreteType);
             try
             {
                 TContract instance;
@@ -157,6 +176,8 @@ namespace Calluna.DI
             }
             finally
             {
+                if (recording)
+                    DependencyRecorder.PopRequester();
                 _creationChain.RemoveAt(_creationChain.Count - 1);
             }
         }
@@ -214,12 +235,24 @@ namespace Calluna.DI
         {
             if (!_nonLazyBindings.ShallCreate(binding))
                 return;
+            if (DependencyRecorder.IsRecording)
+                RecordNonLazy(binding);
             if (binding.ConcreteType.IsSubclassOf(typeof(Component)))
                 GetInstance<Component>(binding);
             else if (binding.ConcreteType.IsSubclassOf(typeof(UnityEngine.Object)))
                 GetInstance<UnityEngine.Object>(binding);
             else
                 GetInstance<object>(binding);
+        }
+
+        // Created by the context itself, not through a resolver: recorded with the requester "(non-lazy)".
+        private void RecordNonLazy(Binding binding)
+        {
+            List<BindingKey> keys = new List<BindingKey>();
+            foreach (KeyValuePair<BindingKey, Binding> entry in _bindings.Entries)
+                if (ReferenceEquals(entry.Value, binding))
+                    keys.Add(entry.Key);
+            DependencyRecorder.RecordNonLazy(Name, binding, keys);
         }
 
         private void TryInjection<TContract>(TContract instance, InstantiationInfo instantiationInfo)

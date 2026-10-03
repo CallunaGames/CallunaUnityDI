@@ -66,6 +66,9 @@ namespace Calluna.DI
             _poolCache = _resolver.Resolve<MonoPoolCache>();
         }
 
+        protected override string ContextName =>
+            string.IsNullOrEmpty(_iD) ? $"Scene {gameObject.scene.name}" : $"Scene {gameObject.scene.name} ({_iD})";
+
         protected override void DoInjection()
         {
             _injector.InjectIntoRootObjectsOf(_scene, _resolver);

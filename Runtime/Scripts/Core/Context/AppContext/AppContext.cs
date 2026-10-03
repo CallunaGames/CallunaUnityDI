@@ -53,6 +53,8 @@ namespace Calluna.DI
 
         protected override void DoInjection() { }
 
+        protected override string ContextName => nameof(AppContext);
+
         /// <summary>
         /// Shuts all contexts down in two phases, children before their parents: first every
         /// <see cref="QuitHandler"/> while all contexts are intact, then the reset of every context.

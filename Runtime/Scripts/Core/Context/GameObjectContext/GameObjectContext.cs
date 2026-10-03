@@ -29,6 +29,9 @@ namespace Calluna.DI
 			return contextFactory.Create(resolver);
 		}
 
+		// Without "(Clone)", so the contexts of a pooled prefab are merged in the dependency graph.
+		protected override string ContextName => $"GameObjectContext {name.Replace("(Clone)", string.Empty).Trim()}";
+
 		protected override void DoInjection()
         {
             _injector.InjectIntoHierarchy(transform, DIContext.Resolver);
