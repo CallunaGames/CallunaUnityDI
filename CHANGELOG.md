@@ -1,3 +1,8 @@
+## [1.7.0-pre.3] - 2026-10-03
+
+### Fixed
+- DI Dependency Graph window: the rows of the Requesters and Unused tabs and the users of a binding were cut off at the label width; they use the full width now (count right-aligned, full text as tooltip). The tabs have a fixed width, so the toolbar fits.
+
 ## [1.7.0-pre.2] - 2026-10-03
 
 ### Added

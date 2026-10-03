@@ -23,6 +23,7 @@ namespace Calluna.DI.Editor
         private readonly HashSet<string> _expanded = new HashSet<string>();
         private DependencyBinding _selected;
         private GUIStyle _richLabel;
+        private GUIStyle _countLabel;
 
         [MenuItem("Window/Calluna/DI Dependency Graph")]
         public static void Open() => GetWindow<DependencyGraphWindow>("DI Dependency Graph");
@@ -41,6 +42,7 @@ namespace Calluna.DI.Editor
         private void OnGUI()
         {
             _richLabel ??= new GUIStyle(EditorStyles.label) { richText = true };
+            _countLabel ??= new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleRight };
             DrawToolbar();
             DependencyGraph graph = DependencyRecorder.Graph;
             if (!graph.Contexts.Any())
@@ -87,9 +89,9 @@ namespace Calluna.DI.Editor
                 }
 
                 GUILayout.Space(8);
-                _tab = (Tab)GUILayout.Toolbar((int)_tab, s_tabNames, EditorStyles.toolbarButton);
+                _tab = (Tab)GUILayout.Toolbar((int)_tab, s_tabNames, EditorStyles.toolbarButton, GUILayout.Width(330));
                 GUILayout.FlexibleSpace();
-                _search = GUILayout.TextField(_search, EditorStyles.toolbarSearchField, GUILayout.Width(220));
+                _search = GUILayout.TextField(_search, EditorStyles.toolbarSearchField, GUILayout.MinWidth(80), GUILayout.MaxWidth(220));
 
                 if (EditorGUILayout.DropdownButton(new GUIContent("Export"), FocusType.Passive, EditorStyles.toolbarDropDown))
                 {
@@ -150,7 +152,7 @@ namespace Calluna.DI.Editor
                 if (users.Count == 0)
                     EditorGUILayout.LabelField("Not used while recording.", EditorStyles.miniLabel);
                 foreach (DependencyEdge edge in users)
-                    EditorGUILayout.LabelField($"← {edge.Requester}", $"{edge.Count}×", EditorStyles.miniLabel);
+                    Row($"← {edge.Requester}", $"{edge.Count}×");
             }
         }
 
@@ -168,7 +170,7 @@ namespace Calluna.DI.Editor
                 using (new EditorGUI.IndentLevelScope())
                 {
                     foreach (DependencyEdge edge in group.OrderBy(e => e.Kind).ThenBy(e => e.Contract))
-                        EditorGUILayout.LabelField(Describe(edge), $"{edge.Count}×", EditorStyles.miniLabel);
+                        Row(Describe(edge), $"{edge.Count}×");
                 }
             }
         }
@@ -200,12 +202,23 @@ namespace Calluna.DI.Editor
                 using (new EditorGUI.IndentLevelScope())
                 {
                     foreach (DependencyBinding binding in unused)
-                        EditorGUILayout.LabelField(binding.Contract, DependencyGraphExporter.BindingInfo(binding), EditorStyles.miniLabel);
+                        Row($"{binding.Contract}   {DependencyGraphExporter.BindingInfo(binding)}", string.Empty);
                 }
             }
         }
 
         // --- Helpers ---
+
+        // A full-width line with an optional right-aligned count; the full text is also the tooltip.
+        private void Row(string text, string count)
+        {
+            const float countWidth = 56;
+            Rect rect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
+            float textWidth = string.IsNullOrEmpty(count) ? rect.width : rect.width - countWidth;
+            GUI.Label(new Rect(rect.x, rect.y, textWidth, rect.height), new GUIContent(text, text), EditorStyles.label);
+            if (!string.IsNullOrEmpty(count))
+                GUI.Label(new Rect(rect.xMax - countWidth, rect.y, countWidth, rect.height), count, _countLabel);
+        }
 
         private bool Foldout(string key, string label)
         {
