@@ -15,7 +15,7 @@ namespace Calluna.DI.Editor
     {
         private enum Tab { Contexts, Requesters, Unused }
 
-        private static readonly string[] s_tabNames = { "Contexts", "Requesters", "Unused bindings" };
+        private static readonly string[] _tabNames = { "Contexts", "Requesters", "Unused bindings" };
         private const string HideInternalsPrefsKey = "Calluna.DI.DependencyGraph.HideInternals";
 
         private Tab _tab;
@@ -98,7 +98,7 @@ namespace Calluna.DI.Editor
                 }
 
                 GUILayout.Space(8);
-                _tab = (Tab)GUILayout.Toolbar((int)_tab, s_tabNames, EditorStyles.toolbarButton, GUILayout.Width(330));
+                _tab = (Tab)GUILayout.Toolbar((int)_tab, _tabNames, EditorStyles.toolbarButton, GUILayout.Width(330));
                 GUILayout.FlexibleSpace();
                 _search = GUILayout.TextField(_search, EditorStyles.toolbarSearchField, GUILayout.MinWidth(80), GUILayout.MaxWidth(220));
 

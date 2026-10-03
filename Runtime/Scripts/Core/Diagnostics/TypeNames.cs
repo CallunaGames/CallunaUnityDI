@@ -11,9 +11,9 @@ namespace Calluna.DI
     /// </summary>
     internal static class TypeNames
     {
-        private static readonly Dictionary<Type, string> s_names = new Dictionary<Type, string>();
-        private static readonly Dictionary<string, Type> s_shortNameOwners = new Dictionary<string, Type>();
-        private static readonly System.Reflection.Assembly s_diAssembly = typeof(TypeNames).Assembly;
+        private static readonly Dictionary<Type, string> _names = new Dictionary<Type, string>();
+        private static readonly Dictionary<string, Type> _shortNameOwners = new Dictionary<string, Type>();
+        private static readonly System.Reflection.Assembly _diAssembly = typeof(TypeNames).Assembly;
 
         public static string Get(BindingKey key) =>
             key.ID == null ? Get(key.Type) : $"{Get(key.Type)} [{key.ID}]";
@@ -22,10 +22,10 @@ namespace Calluna.DI
         {
             if (type == null)
                 return "?";
-            if (!s_names.TryGetValue(type, out string name))
+            if (!_names.TryGetValue(type, out string name))
             {
                 name = Create(type);
-                s_names.Add(type, name);
+                _names.Add(type, name);
             }
             return name;
         }
@@ -38,7 +38,7 @@ namespace Calluna.DI
         {
             if (type == null)
                 return false;
-            if (type.Assembly == s_diAssembly && (!(type.IsPublic || type.IsNestedPublic) || type == typeof(DIContext)))
+            if (type.Assembly == _diAssembly && (!(type.IsPublic || type.IsNestedPublic) || type == typeof(DIContext)))
                 return true;
             return type.IsGenericType && type.GetGenericArguments().Any(IsInternal);
         }
@@ -46,8 +46,8 @@ namespace Calluna.DI
         private static string Create(Type type)
         {
             string name = ShortName(type);
-            if (!s_shortNameOwners.TryGetValue(name, out Type owner))
-                s_shortNameOwners.Add(name, type);
+            if (!_shortNameOwners.TryGetValue(name, out Type owner))
+                _shortNameOwners.Add(name, type);
             else if (owner != type && !string.IsNullOrEmpty(type.Namespace))
                 name = $"{type.Namespace}.{name}";
             return name;

@@ -26,14 +26,14 @@ namespace Calluna.DI
         public const string NonLazy = "(non-lazy)";
         public const string RecordOnPlayPrefsKey = "Calluna.DI.DependencyRecorder.RecordOnPlay";
 
-        private static readonly DependencyGraph s_graph = new DependencyGraph();
-        private static readonly List<(string Name, bool IsInternal)> s_requesters = new List<(string, bool)>();
-        private static bool s_recording;
+        private static readonly DependencyGraph _graph = new DependencyGraph();
+        private static readonly List<(string Name, bool IsInternal)> _requesters = new List<(string, bool)>();
+        private static bool _recording;
 
-        public static DependencyGraph Graph => s_graph;
+        public static DependencyGraph Graph => _graph;
 
 #if UNITY_EDITOR || CALLUNA_DI_RECORDER
-        public static bool IsRecording => s_recording;
+        public static bool IsRecording => _recording;
 #else
         public static bool IsRecording => false;
 #endif
@@ -54,29 +54,29 @@ namespace Calluna.DI
                 Debug.LogWarning($"[{nameof(DependencyRecorder)}] Not available in this build - add the scripting define CALLUNA_DI_RECORDER.");
                 return;
             }
-            s_recording = true;
+            _recording = true;
             OnChanged?.Invoke();
         }
 
         public static void Stop()
         {
-            s_recording = false;
-            s_requesters.Clear();
+            _recording = false;
+            _requesters.Clear();
             OnChanged?.Invoke();
         }
 
         public static void Clear()
         {
-            s_graph.Clear();
-            s_requesters.Clear();
+            _graph.Clear();
+            _requesters.Clear();
             OnChanged?.Invoke();
         }
 
         public static string ToMermaid(string filter = null, bool hideInternals = true) =>
-            DependencyGraphExporter.ToMermaid(s_graph, filter, hideInternals);
+            DependencyGraphExporter.ToMermaid(_graph, filter, hideInternals);
 
         public static string ToDot(string filter = null, bool hideInternals = true) =>
-            DependencyGraphExporter.ToDot(s_graph, filter, hideInternals);
+            DependencyGraphExporter.ToDot(_graph, filter, hideInternals);
 
         public static void WriteMermaid(string path, string filter = null, bool hideInternals = true) =>
             File.WriteAllText(path, ToMermaid(filter, hideInternals), Encoding.UTF8);
@@ -89,7 +89,7 @@ namespace Calluna.DI
         private static void StartOnLoad()
         {
             Clear();
-            s_recording = false;
+            _recording = false;
 #if UNITY_EDITOR
             if (UnityEditor.EditorPrefs.GetBool(RecordOnPlayPrefsKey, false))
                 Start();
@@ -101,7 +101,7 @@ namespace Calluna.DI
         // --- Hooks (callers check IsRecording first) ---
 
         internal static void PushRequester(Type requester) =>
-            s_requesters.Add((TypeNames.Get(requester), TypeNames.IsInternal(requester)));
+            _requesters.Add((TypeNames.Get(requester), TypeNames.IsInternal(requester)));
 
         /// <summary>Pushes <paramref name="requester"/> while recording; dispose to pop it.</summary>
         internal static RequesterScope Requester(Type requester)
@@ -127,14 +127,14 @@ namespace Calluna.DI
 
         internal static void PopRequester()
         {
-            if (s_requesters.Count > 0)
-                s_requesters.RemoveAt(s_requesters.Count - 1);
+            if (_requesters.Count > 0)
+                _requesters.RemoveAt(_requesters.Count - 1);
         }
 
         internal static void RecordContext(string name, string parent, IEnumerable<KeyValuePair<BindingKey, Binding>> bindings,
             IEnumerable<Binding> nonResolvableBindings)
         {
-            DependencyContext context = s_graph.GetOrAddContext(name);
+            DependencyContext context = _graph.GetOrAddContext(name);
             context.Parent = parent;
             context.InitCount++;
             // One node per binding with all its contracts (Bind<A>().And<B>()).
@@ -155,7 +155,7 @@ namespace Calluna.DI
         internal static void RecordResolve(BindingKey key, string providerContext, Binding binding)
         {
             string contract = TypeNames.Get(key);
-            DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
+            DependencyBinding node = _graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
             if (node.Concrete == null)
                 Describe(node, new[] { key }, binding);
             node.ResolveCount++;
@@ -165,13 +165,13 @@ namespace Calluna.DI
 
         internal static void RecordNonLazy(string providerContext, Binding binding, List<BindingKey> keys)
         {
-            s_requesters.Add((NonLazy, false));
+            _requesters.Add((NonLazy, false));
             try
             {
                 if (keys.Count == 0)
                 {
                     string contract = NonResolvableContract(binding);
-                    DependencyBinding node = s_graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
+                    DependencyBinding node = _graph.GetOrAddContext(providerContext).GetOrAddBinding(new[] { contract });
                     if (node.Concrete == null)
                         Describe(node, null, binding);
                     node.ResolveCount++;
@@ -207,15 +207,15 @@ namespace Calluna.DI
 
         private static void AddEdge(string contract, string providerContext, DependencyKind kind, bool contractIsInternal)
         {
-            (string name, bool isInternal) requester = s_requesters.Count > 0
-                ? s_requesters[s_requesters.Count - 1]
+            (string name, bool isInternal) requester = _requesters.Count > 0
+                ? _requesters[_requesters.Count - 1]
                 : (OutsideInjection, false);
             var key = (requester.name, contract, providerContext, kind);
-            if (!s_graph.EdgesByKey.TryGetValue(key, out DependencyEdge edge))
+            if (!_graph.EdgesByKey.TryGetValue(key, out DependencyEdge edge))
             {
                 edge = new DependencyEdge(requester.name, contract, providerContext, kind,
                     requester.isInternal || contractIsInternal);
-                s_graph.EdgesByKey.Add(key, edge);
+                _graph.EdgesByKey.Add(key, edge);
             }
             edge.Count++;
         }

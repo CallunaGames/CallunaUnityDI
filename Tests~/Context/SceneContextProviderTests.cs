@@ -20,10 +20,10 @@ namespace Calluna.DI.Tests
         private SceneContextProvider _provider;
         private List<GameObject> _gameObjects;
 
-        private static readonly FieldInfo s_idField =
+        private static readonly FieldInfo _idField =
             typeof(SceneContext).GetField("_iD", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static readonly FieldInfo s_parentIdField =
+        private static readonly FieldInfo _parentIdField =
             typeof(SceneContext).GetField("_parentContextID", BindingFlags.Instance | BindingFlags.NonPublic);
 
         [SetUp]
@@ -295,8 +295,8 @@ namespace Calluna.DI.Tests
             go.SetActive(false);
             _gameObjects.Add(go);
             SceneContext context = go.AddComponent<SceneContext>();
-            s_idField.SetValue(context, id ?? string.Empty);
-            s_parentIdField.SetValue(context, parentId ?? string.Empty);
+            _idField.SetValue(context, id ?? string.Empty);
+            _parentIdField.SetValue(context, parentId ?? string.Empty);
             return context;
         }
     }
